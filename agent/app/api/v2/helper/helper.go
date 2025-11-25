@@ -1,10 +1,14 @@
 package helper
 
 import (
+	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/1Panel-dev/1Panel/agent/global"
 	"gorm.io/gorm"
@@ -43,6 +47,42 @@ func SuccessWithData(ctx *gin.Context, data interface{}) {
 		Data: data,
 	}
 	ctx.JSON(http.StatusOK, res)
+	ctx.Abort()
+}
+
+var gzipWriterPool = sync.Pool{
+	New: func() interface{} {
+		return gzip.NewWriter(nil)
+	},
+}
+
+func SuccessWithDataGzipped(ctx *gin.Context, data interface{}) {
+	if !strings.Contains(ctx.GetHeader("Accept-Encoding"), "gzip") {
+		SuccessWithData(ctx, data)
+		return
+	}
+	if data == nil {
+		data = gin.H{}
+	}
+	res := dto.Response{
+		Code: http.StatusOK,
+		Data: data,
+	}
+	jsonBytes, err := json.Marshal(res)
+	if err != nil {
+		ErrorWithDetail(ctx, http.StatusInternalServerError, "ErrInternalServer", err)
+		return
+	}
+
+	ctx.Header("Content-Encoding", "gzip")
+	ctx.Header("Content-Type", "application/json; charset=utf-8")
+	ctx.Status(http.StatusOK)
+
+	gz := gzipWriterPool.Get().(*gzip.Writer)
+	gz.Reset(ctx.Writer)
+	_, _ = gz.Write(jsonBytes)
+	_ = gz.Close()
+	gzipWriterPool.Put(gz)
 	ctx.Abort()
 }
 
