@@ -1,7 +1,13 @@
 <template>
     <div class="custom-row">
         <el-col :xs="6" :sm="6" :md="3" :lg="3" :xl="3" align="center">
-            <el-popover :hide-after="20" :teleported="false" :width="320" v-if="chartsOption['load']">
+            <el-popover
+                :hide-after="20"
+                :teleported="false"
+                :width="320"
+                v-if="chartsOption['load']"
+                @hide="onCpuPopoverHide"
+            >
                 <el-descriptions :column="1" size="small">
                     <el-descriptions-item :label="$t('home.loadAverage', [1])">
                         {{ formatNumber(currentInfo.load1) }}
@@ -14,12 +20,12 @@
                     </el-descriptions-item>
                 </el-descriptions>
 
-                <el-button link size="small" type="primary" class="float-left mb-2" @click="showTop = !showTop">
+                <el-button link size="small" type="primary" class="float-left mb-2" @click="toggleCpuTop">
                     {{ $t('home.cpuTop') }}
-                    <el-icon v-if="!showTop"><ArrowRight /></el-icon>
-                    <el-icon v-if="showTop"><ArrowDown /></el-icon>
+                    <el-icon v-if="!showCpuTop"><ArrowRight /></el-icon>
+                    <el-icon v-if="showCpuTop"><ArrowDown /></el-icon>
                 </el-button>
-                <ComplexTable v-if="showTop" :data="currentInfo.topCPUItems">
+                <ComplexTable v-if="showCpuTop" :data="currentInfo.topCPUItems">
                     <el-table-column :min-width="120" show-overflow-tooltip :label="$t('menu.process')" prop="name" />
                     <el-table-column :min-width="60" :label="$t('monitor.percent')" prop="percent">
                         <template #default="{ row }">{{ row.percent.toFixed(2) }}%</template>
@@ -45,7 +51,13 @@
             <span class="input-help">{{ loadStatus(currentInfo.loadUsagePercent) }}</span>
         </el-col>
         <el-col :xs="6" :sm="6" :md="3" :lg="3" :xl="3">
-            <el-popover :hide-after="20" :teleported="false" :width="430" v-if="chartsOption['cpu']">
+            <el-popover
+                :hide-after="20"
+                :teleported="false"
+                :width="430"
+                v-if="chartsOption['cpu']"
+                @hide="onCpuPopoverHide"
+            >
                 <el-descriptions :title="baseInfo.cpuModelName" :column="2" size="small">
                     <el-descriptions-item :label="$t('home.core')">
                         {{ baseInfo.cpuCores }}
@@ -71,12 +83,12 @@
                 </div>
                 <br />
 
-                <el-button link size="small" type="primary" class="mt-1 mb-2" @click="showTop = !showTop">
+                <el-button link size="small" type="primary" class="mt-2 mb-2" @click="toggleCpuTop">
                     {{ $t('home.cpuTop') }}
-                    <el-icon v-if="!showTop"><ArrowRight /></el-icon>
-                    <el-icon v-if="showTop"><ArrowDown /></el-icon>
+                    <el-icon v-if="!showCpuTop"><ArrowRight /></el-icon>
+                    <el-icon v-if="showCpuTop"><ArrowDown /></el-icon>
                 </el-button>
-                <ComplexTable v-if="showTop" :data="currentInfo.topCPUItems">
+                <ComplexTable v-if="showCpuTop" :data="currentInfo.topCPUItems">
                     <el-table-column :min-width="120" show-overflow-tooltip :label="$t('menu.process')" prop="name" />
                     <el-table-column :min-width="60" :label="$t('monitor.percent')" prop="percent">
                         <template #default="{ row }">{{ row.percent.toFixed(2) }}%</template>
@@ -107,7 +119,13 @@
             </div>
         </el-col>
         <el-col :xs="6" :sm="6" :md="3" :lg="3" :xl="3" align="center">
-            <el-popover :hide-after="20" :teleported="false" :width="480" v-if="chartsOption['memory']">
+            <el-popover
+                :hide-after="20"
+                :teleported="false"
+                :width="480"
+                v-if="chartsOption['memory']"
+                @hide="onMemPopoverHide"
+            >
                 <el-descriptions direction="vertical" :title="$t('home.mem')" class="ml-1" :column="4" size="small">
                     <el-descriptions-item :label-width="60" :label="$t('home.total')">
                         {{ computeSize(currentInfo.memoryTotal) }}
@@ -154,12 +172,12 @@
                     </el-descriptions-item>
                 </el-descriptions>
 
-                <el-button link size="small" type="primary" class="float-left mb-2" @click="showTop = !showTop">
+                <el-button link size="small" type="primary" class="float-left mb-2" @click="toggleMemTop">
                     {{ $t('home.memTop') }}
-                    <el-icon v-if="!showTop"><ArrowRight /></el-icon>
-                    <el-icon v-if="showTop"><ArrowDown /></el-icon>
+                    <el-icon v-if="!showMemTop"><ArrowRight /></el-icon>
+                    <el-icon v-if="showMemTop"><ArrowDown /></el-icon>
                 </el-button>
-                <ComplexTable v-if="showTop" :data="currentInfo.topMemItems">
+                <ComplexTable v-if="showMemTop" :data="currentInfo.topMemItems">
                     <el-table-column :min-width="120" show-overflow-tooltip :label="$t('menu.process')" prop="name" />
                     <el-table-column :min-width="100" :label="$t('monitor.memory')" prop="memory">
                         <template #default="{ row }">
@@ -334,12 +352,18 @@
 import { Dashboard } from '@/api/interface/dashboard';
 import { computeSize } from '@/utils/util';
 import i18n from '@/lang';
-import { nextTick, ref } from 'vue';
+import { nextTick, onBeforeUnmount, ref } from 'vue';
 import { routerToFileWithPath, routerToName } from '@/utils/router';
 import { stopProcess } from '@/api/modules/process';
+import { loadTopCPU, loadTopMem } from '@/api/modules/dashboard';
 import { MsgSuccess } from '@/utils/message';
 const showMore = ref(false);
 const totalCount = ref();
+
+let cpuPopoverTimer: ReturnType<typeof setTimeout> | null = null;
+let memPopoverTimer: ReturnType<typeof setTimeout> | null = null;
+let cpuLoading = false;
+let memLoading = false;
 
 const baseInfo = ref<Dashboard.BaseInfo>({
     hostname: '',
@@ -405,7 +429,8 @@ const currentInfo = ref<Dashboard.CurrentInfo>({
 });
 
 const cpuShowAll = ref();
-const showTop = ref();
+const showCpuTop = ref(false);
+const showMemTop = ref(false);
 const killProcessID = ref();
 const confirmConfRef = ref();
 
@@ -514,6 +539,91 @@ const goGPU = () => {
 function formatNumber(val: number) {
     return Number(val.toFixed(2));
 }
+
+const toggleCpuTop = async () => {
+    showCpuTop.value = !showCpuTop.value;
+    if (showCpuTop.value) {
+        await loadTopCPUData();
+        if (cpuPopoverTimer) {
+            clearInterval(Number(cpuPopoverTimer));
+        }
+        cpuPopoverTimer = setInterval(loadTopCPUData, 5000);
+    } else {
+        if (cpuPopoverTimer) {
+            clearInterval(Number(cpuPopoverTimer));
+            cpuPopoverTimer = null;
+        }
+    }
+};
+
+const onCpuPopoverHide = () => {
+    showCpuTop.value = false;
+    if (cpuPopoverTimer) {
+        clearInterval(Number(cpuPopoverTimer));
+        cpuPopoverTimer = null;
+    }
+};
+
+const toggleMemTop = async () => {
+    showMemTop.value = !showMemTop.value;
+    if (showMemTop.value) {
+        await loadTopMemData();
+        if (memPopoverTimer) {
+            clearInterval(Number(memPopoverTimer));
+        }
+        memPopoverTimer = setInterval(loadTopMemData, 5000);
+    } else {
+        if (memPopoverTimer) {
+            clearInterval(Number(memPopoverTimer));
+            memPopoverTimer = null;
+        }
+    }
+};
+
+const onMemPopoverHide = () => {
+    showMemTop.value = false;
+    if (memPopoverTimer) {
+        clearInterval(Number(memPopoverTimer));
+        memPopoverTimer = null;
+    }
+};
+
+const loadTopCPUData = async () => {
+    if (cpuLoading) return;
+    cpuLoading = true;
+    try {
+        const res = await loadTopCPU();
+        currentInfo.value.topCPUItems = res.data || [];
+    } catch (_error) {
+        // ignore load errors
+    } finally {
+        cpuLoading = false;
+    }
+};
+
+const loadTopMemData = async () => {
+    if (memLoading) return;
+    memLoading = true;
+    try {
+        const res = await loadTopMem();
+        currentInfo.value.topMemItems = res.data || [];
+    } catch (_error) {
+        // ignore load errors
+    } finally {
+        memLoading = false;
+    }
+};
+
+onBeforeUnmount(() => {
+    if (cpuPopoverTimer) {
+        clearInterval(Number(cpuPopoverTimer));
+        cpuPopoverTimer = null;
+    }
+    if (memPopoverTimer) {
+        clearInterval(Number(memPopoverTimer));
+        memPopoverTimer = null;
+    }
+});
 
 defineExpose({
     acceptParams,
