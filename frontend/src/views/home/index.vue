@@ -77,6 +77,7 @@
                     :header="$t('menu.monitor')"
                     class="card-interval chart-card"
                     v-loading="!chartsOption['networkChart']"
+                    @mouseenter="refreshOptionsOnHover"
                 >
                     <template #header-r>
                         <el-radio-group
@@ -173,6 +174,7 @@
                     <el-carousel-item key="systemInfo">
                         <CardWithHeader :header="$t('home.systemInfo')">
                             <template #header-r>
+                                <el-button class="h-button-setting" @click="refreshDashboard" link icon="Refresh" />
                                 <el-button
                                     class="h-button-setting"
                                     @click="toggleSensitiveInfo"
@@ -334,8 +336,17 @@ import { GlobalStore } from '@/store';
 import { storeToRefs } from 'pinia';
 import { routerToFileWithPath, routerToPath } from '@/utils/router';
 import { getWelcomePage } from '@/api/modules/auth';
+import { clearDashboardCache, getDashboardCache, setDashboardCache } from '@/utils/dashboardCache';
 const router = useRouter();
 const globalStore = GlobalStore();
+
+const DASHBOARD_CACHE_TTL = {
+    safeStatus: 10 * 60 * 1000,
+    netOptions: 60 * 60 * 1000,
+    ioOptions: 60 * 60 * 1000,
+};
+const UPGRADE_CHECK_KEY = 'upgradeChecked';
+const UPGRADE_CHECK_EXPIRE = 24 * 60 * 60 * 1000;
 
 const statusRef = ref();
 const appRef = ref();
@@ -364,6 +375,9 @@ const timeNetDatas = ref<Array<string>>([]);
 const simpleNodes = ref([]);
 const ioOptions = ref();
 const netOptions = ref();
+const netOptionsFromCache = ref(false);
+const ioOptionsFromCache = ref(false);
+const hasRefreshedOptionsOnHover = ref(false);
 
 const licenseRef = ref();
 const quickJumpRef = ref();
@@ -463,10 +477,30 @@ const changeOption = async () => {
     loadData();
 };
 
-const onLoadNetworkOptions = async () => {
+const applyDefaultNetOption = () => {
+    if (!netOptions.value || netOptions.value.length === 0) return;
+    const defaultNet = globalStore.defaultNetwork || netOptions.value[0];
+    if (defaultNet && searchInfo.netOption !== defaultNet) {
+        searchInfo.netOption = defaultNet;
+        if (!isStatusInit.value) {
+            onLoadBaseInfo(false, 'network');
+        }
+    }
+};
+
+const onLoadNetworkOptions = async (force?: boolean) => {
+    const cache = force ? null : getDashboardCache('netOptions');
+    if (cache !== null) {
+        netOptions.value = cache;
+        netOptionsFromCache.value = true;
+        applyDefaultNetOption();
+        return;
+    }
     const res = await getNetworkOptions();
     netOptions.value = res.data;
-    searchInfo.netOption = globalStore.defaultNetwork || (netOptions.value && netOptions.value[0]);
+    netOptionsFromCache.value = false;
+    setDashboardCache('netOptions', res.data, DASHBOARD_CACHE_TTL.netOptions);
+    applyDefaultNetOption();
 };
 
 const onLoadSimpleNode = async () => {
@@ -474,10 +508,30 @@ const onLoadSimpleNode = async () => {
     simpleNodes.value = res.data || [];
 };
 
-const onLoadIOOptions = async () => {
+const applyDefaultIOOption = () => {
+    if (!ioOptions.value || ioOptions.value.length === 0) return;
+    const defaultIO = globalStore.defaultIO || ioOptions.value[0];
+    if (defaultIO && searchInfo.ioOption !== defaultIO) {
+        searchInfo.ioOption = defaultIO;
+        if (!isStatusInit.value) {
+            onLoadBaseInfo(false, 'io');
+        }
+    }
+};
+
+const onLoadIOOptions = async (force?: boolean) => {
+    const cache = force ? null : getDashboardCache('ioOptions');
+    if (cache !== null) {
+        ioOptions.value = cache;
+        ioOptionsFromCache.value = true;
+        applyDefaultIOOption();
+        return;
+    }
     const res = await getIOOptions();
     ioOptions.value = res.data;
-    searchInfo.ioOption = globalStore.defaultIO || (ioOptions.value && ioOptions.value[0]);
+    ioOptionsFromCache.value = false;
+    setDashboardCache('ioOptions', ioOptions.value, DASHBOARD_CACHE_TTL.ioOptions);
+    applyDefaultIOOption();
 };
 
 const onLoadBaseInfo = async (isInit: boolean, range: string) => {
@@ -528,6 +582,15 @@ const showSimpleNode = () => {
 
 const toggleSensitiveInfo = () => {
     showSensitiveInfo.value = !showSensitiveInfo.value;
+};
+
+const refreshDashboard = async () => {
+    clearDashboardCache();
+    localStorage.removeItem(UPGRADE_CHECK_KEY);
+    hasRefreshedOptionsOnHover.value = false;
+    await onLoadBaseInfo(false, 'all');
+    await Promise.allSettled([onLoadSimpleNode(), onLoadNetworkOptions(true), onLoadIOOptions(true), loadSafeStatus()]);
+    await loadUpgradeStatus();
 };
 
 const jumpPanel = (row: any) => {
@@ -670,17 +733,26 @@ const hideEntrance = () => {
 };
 
 const loadUpgradeStatus = async () => {
+    const checkedAt = Number(localStorage.getItem(UPGRADE_CHECK_KEY));
+    if (checkedAt && Date.now() - checkedAt < UPGRADE_CHECK_EXPIRE) return;
     const res = await loadUpgradeInfo();
     if (res && (res.data.testVersion || res.data.newVersion || res.data.latestVersion)) {
         globalStore.hasNewVersion = true;
     } else {
         globalStore.hasNewVersion = false;
     }
+    localStorage.setItem(UPGRADE_CHECK_KEY, Date.now().toString());
 };
 
 const loadSafeStatus = async () => {
+    const cache = getDashboardCache('safeStatus');
+    if (cache !== null) {
+        isSafety.value = cache;
+        return;
+    }
     const res = await getSettingInfo();
     isSafety.value = res.data.securityEntrance;
+    setDashboardCache('safeStatus', isSafety.value, DASHBOARD_CACHE_TTL.safeStatus);
 };
 
 const loadSource = (row: any) => {
@@ -712,15 +784,40 @@ const toUpload = () => {
     licenseRef.value.acceptParams();
 };
 
-const fetchData = () => {
+const refreshOptionsOnHover = async () => {
+    if (hasRefreshedOptionsOnHover.value) return;
+    if (!netOptionsFromCache.value && !ioOptionsFromCache.value) return;
+    hasRefreshedOptionsOnHover.value = true;
+    if (netOptionsFromCache.value) {
+        await onLoadNetworkOptions(true);
+    }
+    if (ioOptionsFromCache.value) {
+        await onLoadIOOptions(true);
+    }
+};
+
+const scheduleDeferredFetch = () => {
+    setTimeout(() => {
+        onLoadSimpleNode();
+    }, 200);
+    setTimeout(() => {
+        onLoadNetworkOptions();
+    }, 400);
+    setTimeout(() => {
+        onLoadIOOptions();
+    }, 600);
+    setTimeout(() => {
+        loadUpgradeStatus();
+    }, 800);
+};
+
+const fetchData = async () => {
     window.addEventListener('focus', onFocus);
     window.addEventListener('blur', onBlur);
-    loadSafeStatus();
-    loadUpgradeStatus();
-    onLoadNetworkOptions();
-    onLoadIOOptions();
-    onLoadBaseInfo(true, 'all');
-    onLoadSimpleNode();
+    hasRefreshedOptionsOnHover.value = false;
+    await loadSafeStatus();
+    await onLoadBaseInfo(true, 'all');
+    scheduleDeferredFetch();
 };
 
 const loadWelcome = async () => {
