@@ -90,7 +90,7 @@ func (b *BaseApi) GetFileTree(c *gin.Context) {
 		helper.InternalServer(c, err)
 		return
 	}
-	helper.SuccessWithData(c, tree)
+	helper.SuccessWithDataGzipped(c, tree)
 }
 
 // @Tags File
@@ -265,7 +265,11 @@ func (b *BaseApi) GetContent(c *gin.Context) {
 		helper.InternalServer(c, err)
 		return
 	}
-	helper.SuccessWithData(c, info)
+	if info.Size > 2*1024 && info.Size < 5*1024*1024 {
+		helper.SuccessWithDataGzipped(c, info)
+	} else {
+		helper.SuccessWithData(c, info)
+	}
 }
 
 // @Tags File
