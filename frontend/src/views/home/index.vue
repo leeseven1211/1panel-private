@@ -402,6 +402,7 @@ const baseInfo = ref<Dashboard.BaseInfo>({
     cpuCores: 0,
     cpuLogicalCores: 0,
     cpuModelName: '',
+    cpuMhz: 0,
     currentInfo: null,
 
     quickJump: [],
@@ -420,6 +421,7 @@ const currentInfo = ref<Dashboard.CurrentInfo>({
     cpuUsedPercent: 0,
     cpuUsed: 0,
     cpuTotal: 0,
+    cpuDetailedPercent: [] as Array<number>,
 
     memoryTotal: 0,
     memoryAvailable: 0,
