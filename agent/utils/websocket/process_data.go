@@ -1,15 +1,13 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/1Panel-dev/1Panel/agent/utils/common"
-
 	"github.com/1Panel-dev/1Panel/agent/global"
 	"github.com/1Panel-dev/1Panel/agent/utils/files"
 	"github.com/shirou/gopsutil/v4/host"
@@ -156,93 +154,85 @@ func getDownloadProcess(progress DownloadProgress) (res []byte, err error) {
 	return
 }
 
+func handleProcessData(proc *process.Process, processConfig *PsProcessConfig, pidConnections map[int32][]net.ConnectionStat) *PsProcessData {
+	if processConfig.Pid > 0 && processConfig.Pid != proc.Pid {
+		return nil
+	}
+	procData := PsProcessData{
+		PID: proc.Pid,
+	}
+	if procName, err := proc.Name(); err == nil {
+		procData.Name = procName
+	} else {
+		procData.Name = "<UNKNOWN>"
+	}
+	if processConfig.Name != "" && !strings.Contains(procData.Name, processConfig.Name) {
+		return nil
+	}
+	if username, err := proc.Username(); err == nil {
+		procData.Username = username
+	}
+	if processConfig.Username != "" && !strings.Contains(procData.Username, processConfig.Username) {
+		return nil
+	}
+	procData.PPID, _ = proc.Ppid()
+	statusArray, _ := proc.Status()
+	if len(statusArray) > 0 {
+		procData.Status = strings.Join(statusArray, ",")
+	}
+	createTime, procErr := proc.CreateTime()
+	if procErr == nil {
+		t := time.Unix(createTime/1000, 0)
+		procData.StartTime = t.Format("2006-1-2 15:04:05")
+	}
+	procData.NumThreads, _ = proc.NumThreads()
+	procData.CpuValue, _ = proc.CPUPercent()
+	procData.CpuPercent = fmt.Sprintf("%.2f%%", procData.CpuValue)
+
+	if memInfo, err := proc.MemoryInfo(); err == nil {
+		procData.RssValue = memInfo.RSS
+		procData.Rss = common.FormatBytes(memInfo.RSS)
+	} else {
+		procData.RssValue = 0
+	}
+
+	if connections, ok := pidConnections[proc.Pid]; ok {
+		procData.NumConnections = len(connections)
+	}
+
+	return &procData
+}
+
 func getProcessData(processConfig PsProcessConfig) (res []byte, err error) {
-	var processes []*process.Process
-	processes, err = process.Processes()
+	ctx := context.Background()
+
+	processes, err := process.ProcessesWithContext(ctx)
 	if err != nil {
 		return
 	}
 
-	var (
-		result      []PsProcessData
-		resultMutex sync.Mutex
-		wg          sync.WaitGroup
-		numWorkers  = 4
-	)
-
-	handleData := func(proc *process.Process) {
-		procData := PsProcessData{
-			PID: proc.Pid,
-		}
-		if processConfig.Pid > 0 && processConfig.Pid != proc.Pid {
-			return
-		}
-		if procName, err := proc.Name(); err == nil {
-			procData.Name = procName
-		} else {
-			procData.Name = "<UNKNOWN>"
-		}
-		if processConfig.Name != "" && !strings.Contains(procData.Name, processConfig.Name) {
-			return
-		}
-		if username, err := proc.Username(); err == nil {
-			procData.Username = username
-		}
-		if processConfig.Username != "" && !strings.Contains(procData.Username, processConfig.Username) {
-			return
-		}
-		procData.PPID, _ = proc.Ppid()
-		statusArray, _ := proc.Status()
-		if len(statusArray) > 0 {
-			procData.Status = strings.Join(statusArray, ",")
-		}
-		createTime, procErr := proc.CreateTime()
-		if procErr == nil {
-			t := time.Unix(createTime/1000, 0)
-			procData.StartTime = t.Format("2006-1-2 15:04:05")
-		}
-		procData.NumThreads, _ = proc.NumThreads()
-		procData.CpuValue, _ = proc.CPUPercent()
-		procData.CpuPercent = fmt.Sprintf("%.2f", procData.CpuValue) + "%"
-
-		if memInfo, err := proc.MemoryInfo(); err == nil {
-			procData.RssValue = memInfo.RSS
-			procData.Rss = common.FormatBytes(memInfo.RSS)
-		} else {
-			procData.RssValue = 0
-		}
-
-		if connections, err := proc.Connections(); err == nil {
-			procData.NumConnections = len(connections)
-		}
-
-		resultMutex.Lock()
-		result = append(result, procData)
-		resultMutex.Unlock()
+	connections, err := net.ConnectionsMaxWithContext(ctx, "all", 32768)
+	if err != nil {
+		return
 	}
 
-	chunkSize := (len(processes) + numWorkers - 1) / numWorkers
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		start := i * chunkSize
-		end := (i + 1) * chunkSize
-		if end > len(processes) {
-			end = len(processes)
+	pidConnections := make(map[int32][]net.ConnectionStat, len(processes))
+	for _, conn := range connections {
+		if conn.Pid == 0 {
+			continue
 		}
-
-		go func(start, end int) {
-			defer wg.Done()
-			for j := start; j < end; j++ {
-				handleData(processes[j])
-			}
-		}(start, end)
+		pidConnections[conn.Pid] = append(pidConnections[conn.Pid], conn)
 	}
 
-	wg.Wait()
+	result := make([]PsProcessData, 0, len(processes))
 
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].PID < result[j].PID
-	})
+	for _, proc := range processes {
+		procData := handleProcessData(proc, &processConfig, pidConnections)
+		if procData != nil {
+			result = append(result, *procData)
+		}
+	}
+
 	res, err = json.Marshal(result)
 	return
 }
