@@ -2617,6 +2617,11 @@ const message = {
         createDb: 'Cipta Pangkalan Data',
         enableSSLHelper: 'Kegagalan mengaktifkan SSL tidak akan menjejaskan penciptaan laman web.',
         batchAdd: 'Tambah Domain Secara Batch',
+        batchInput: 'Input Kelompok',
+        domainNotFQDN: 'Domain ini mungkin tidak boleh diakses di rangkaian awam',
+        domainInvalid: 'Format domain tidak sah',
+        domainBatchHelper:
+            'Satu domain per baris, format: domain:port@ssl\nContoh: example.com:443@ssl atau example.com',
         generateDomain: 'Hasilkan',
         global: 'Global',
         subsite: 'Sublaman',

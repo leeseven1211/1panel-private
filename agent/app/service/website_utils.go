@@ -1107,7 +1107,7 @@ func getWebsiteDomains(domains []request.WebsiteDomain, defaultHTTPPort, default
 		if domain.Domain == "" {
 			continue
 		}
-		if !common.IsValidDomain(domain.Domain) {
+		if !common.IsValidNginxServerName(domain.Domain) {
 			err = buserr.WithName("ErrDomainFormat", domain.Domain)
 			return
 		}

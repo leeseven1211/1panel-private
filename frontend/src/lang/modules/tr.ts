@@ -2675,6 +2675,11 @@ const message = {
         createDb: 'Veritabanı Oluştur',
         enableSSLHelper: 'Etkinleştirme başarısızlığı web sitesinin oluşturulmasını etkilemez',
         batchAdd: 'Toplu Alan Adı Ekle',
+        batchInput: 'Toplu Giriş',
+        domainNotFQDN: 'Bu alan adı genel ağda erişilebilir olmayabilir',
+        domainInvalid: 'Geçersiz alan adı biçimi',
+        domainBatchHelper:
+            'Bir satırda bir alan adı, format: domain:port@ssl\nÖrnek: example.com:443@ssl veya example.com',
         generateDomain: 'Oluştur',
         global: 'Küresel',
         subsite: 'Alt site',
