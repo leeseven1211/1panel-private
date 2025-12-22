@@ -711,6 +711,9 @@ func (u *FirewallService) addPortsBeforeStart(client firewall.FirewallClient) er
 	if err := client.Port(fireClient.FireInfo{Port: "443", Protocol: "tcp", Strategy: "accept"}, "add"); err != nil {
 		return err
 	}
+	if err := client.Port(fireClient.FireInfo{Port: "443", Protocol: "udp", Strategy: "accept"}, "add"); err != nil {
+		return err
+	}
 
 	return client.Reload()
 }
