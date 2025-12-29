@@ -2009,7 +2009,7 @@ const message = {
         error416: 'Rango no satisfactorio',
         error444: 'Conexión cerrada',
         error500: 'Error interno del servidor',
-        https: 'Configurar acceso al panel mediante protocolo HTTPS puede mejorar la seguridad del acceso.',
+        https: 'Configurar HTTPS en el panel mejora la seguridad de acceso.\nEn modo Strict, el tráfico sin HTTPS no puede conectarse al panel.\nEl modo Mux redirige HTTP a HTTPS, pero puede reducir la seguridad.',
         certType: 'Tipo de certificado',
         selfSigned: 'Autofirmado',
         selfSignedHelper:

@@ -1965,7 +1965,7 @@ const message = {
         error444: 'Conexão fechada',
         error500: 'Erro no servidor',
 
-        https: 'Configurar o acesso via protocolo HTTPS para o painel pode melhorar a segurança do acesso ao painel.',
+        https: 'Configurar HTTPS no painel melhora a segurança de acesso.\nNo modo Strict, tráfego sem HTTPS não consegue se conectar ao painel.\nO modo Mux redireciona HTTP para HTTPS, mas pode reduzir a segurança.',
         certType: 'Tipo de certificado',
         selfSigned: 'Autoassinado',
         selfSignedHelper:
