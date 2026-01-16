@@ -526,20 +526,14 @@
                                 </template>
                             </el-table-column>
                             <el-table-column
-                                :label="$t('commons.table.user')"
+                                :label="`${$t('commons.table.user')} / ${$t('file.group')}`"
                                 prop="user"
                                 show-overflow-tooltip
-                                min-width="90"
+                                min-width="150"
                             >
                                 <template #default="{ row }">
                                     <el-link underline="never" @click="openChown(row)">
-                                        {{ row.user ? row.user : '-' }} ({{ row.uid }})
-                                    </el-link>
-                                </template>
-                            </el-table-column>
-                            <el-table-column :label="$t('file.group')" prop="group" show-overflow-tooltip>
-                                <template #default="{ row }">
-                                    <el-link underline="never" @click="openChown(row)">
+                                        {{ row.user ? row.user : '-' }} ({{ row.uid }}) /
                                         {{ row.group ? row.group : '-' }} ({{ row.gid }})
                                     </el-link>
                                 </template>
@@ -573,6 +567,16 @@
                                 show-overflow-tooltip
                                 :sortable="'custom'"
                             ></el-table-column>
+                            <el-table-column
+                                :label="$t('file.remark')"
+                                prop="remark"
+                                min-width="180"
+                                show-overflow-tooltip
+                            >
+                                <template #default="{ row }">
+                                    <span>{{ row.remark ? row.remark : '-' }}</span>
+                                </template>
+                            </el-table-column>
                             <fu-table-operations
                                 :max-height="dropdownMaxHeight"
                                 :ellipsis="mobile ? 0 : 2"
@@ -641,11 +645,13 @@
 import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import {
     addFavorite,
+    batchGetFileRemarks,
     computeDepthDirSize,
     computeDirSize,
     fileWgetKeys,
     getFileContent,
     getFilesList,
+    setFileRemark,
     removeFavorite,
     renameRile,
     searchFavorite,
@@ -715,6 +721,8 @@ const heightDiff = ref(365);
 const fileTableRef = ref<HTMLElement | null>(null);
 const dropdownMaxHeight = ref(450);
 const baseDir = ref();
+const remarkRequestId = ref(0);
+const remarkLoadTimer = ref<number | null>(null);
 const editableTabsKey = ref('');
 const editableTabs = ref([
     { id: '1', name: getLastPath(baseDir.value), path: baseDir.value },
@@ -881,6 +889,7 @@ const handleSearchResult = (res: ResultData<File.File>) => {
     dirNum.value = data.value.filter((item) => item.isDir).length;
     fileNum.value = data.value.filter((item) => !item.isDir).length;
     req.path = res.data.path;
+    scheduleRemarkLoad();
 };
 
 const viewHideFile = async () => {
@@ -1560,6 +1569,23 @@ const openWithVSCode = (row: File.File) => {
     dialogVscodeOpenRef.value.acceptParams({ path: row.path + (row.isDir ? '' : ':1:1') });
 };
 
+const openRemark = async (row: File.File) => {
+    try {
+        const res = await ElMessageBox.prompt(i18n.global.t('file.remarkPrompt'), i18n.global.t('file.setRemark'), {
+            confirmButtonText: i18n.global.t('commons.button.confirm'),
+            cancelButtonText: i18n.global.t('commons.button.cancel'),
+            inputValue: row.remark ?? '',
+            inputPlaceholder: i18n.global.t('file.remarkPlaceholder'),
+        });
+        const remark = res.value ?? '';
+        await setFileRemark({ path: row.path, remark: remark });
+        row.remark = remark;
+        MsgSuccess(i18n.global.t('commons.msg.updateSuccess'));
+    } catch (error) {
+        return;
+    }
+};
+
 const beforeButtons = [
     {
         label: i18n.global.t('commons.button.open'),
@@ -1619,6 +1645,13 @@ const beforeButtons = [
         label: i18n.global.t('file.editPermissions'),
         click: (row: File.File) => {
             openBatchRole([row]);
+        },
+    },
+    {
+        label: i18n.global.t('file.setRemark'),
+        hideOnRemarkBlackList: true,
+        click: (row: File.File) => {
+            openRemark(row);
         },
     },
 ];
@@ -1682,8 +1715,15 @@ const moreBtnRename = [
     },
 ];
 
-const rightButtons = [...beforeButtons, ...rightBtnRename, ...afterButtons];
-const tableMoreButtons = [...beforeButtons, ...moreBtnRename, ...afterButtons];
+const filterRemarkButtons = (buttons: any[]) => {
+    if (!isInRemarkBlackList(req.path)) {
+        return buttons;
+    }
+    return buttons.filter((btn) => !btn.hideOnRemarkBlackList);
+};
+
+const rightButtons = computed(() => filterRemarkButtons([...beforeButtons, ...rightBtnRename, ...afterButtons]));
+const tableMoreButtons = computed(() => filterRemarkButtons([...beforeButtons, ...moreBtnRename, ...afterButtons]));
 const openConvert = (item: File.File) => {
     if (!ffmpegExist.value) {
         ElMessageBox.confirm(i18n.global.t('cronjob.library.noSuchApp', ['FFmpeg']), i18n.global.t('file.convert'), {
@@ -1767,6 +1807,44 @@ function initShowHidden() {
         req.showHidden = showHidden === 'true';
     }
 }
+
+const remarkBlackList = ['/proc', '/sys', '/dev', '/run'];
+
+const scheduleRemarkLoad = () => {
+    if (remarkLoadTimer.value) {
+        window.clearTimeout(remarkLoadTimer.value);
+    }
+    if (isInRemarkBlackList(req.path)) {
+        return;
+    }
+    remarkLoadTimer.value = window.setTimeout(() => {
+        void loadRemarksForCurrentPage();
+    }, 1000);
+};
+
+const isInRemarkBlackList = (path: string) => {
+    return remarkBlackList.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+};
+
+const loadRemarksForCurrentPage = async () => {
+    if (!Array.isArray(data.value) || data.value.length === 0) return;
+    const paths = data.value.map((item) => item.path).filter(Boolean);
+    if (paths.length === 0) return;
+    const currentId = ++remarkRequestId.value;
+    try {
+        const res = await batchGetFileRemarks(paths);
+        if (currentId !== remarkRequestId.value) return;
+        const remarks = res.data?.remarks || {};
+        data.value.forEach((item) => {
+            const remark = remarks[item.path];
+            if (remark !== undefined && remark !== '') {
+                item.remark = remark;
+            }
+        });
+    } catch (error) {
+        if (currentId !== remarkRequestId.value) return;
+    }
+};
 
 function initTabsAndPaths() {
     initTabs();
@@ -1967,6 +2045,9 @@ onBeforeUnmount(() => {
     if (resizeObserver) resizeObserver.disconnect();
     window.removeEventListener('resize', watchTitleHeight);
     window.removeEventListener('resize', updateHeight);
+    if (remarkLoadTimer.value) {
+        window.clearTimeout(remarkLoadTimer.value);
+    }
 });
 </script>
 
