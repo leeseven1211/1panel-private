@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -132,6 +133,12 @@ var InitSetting = &gormigrate.Migration{
 		if err := tx.Create(&model.Setting{Key: "MFAInterval", Value: "30"}).Error; err != nil {
 			return err
 		}
+		if err := tx.Create(&model.Setting{Key: "PasskeyUserID", Value: ""}).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&model.Setting{Key: "PasskeyCredentials", Value: ""}).Error; err != nil {
+			return err
+		}
 		if err := tx.Create(&model.Setting{Key: "SystemVersion", Value: global.CONF.Base.Version}).Error; err != nil {
 			return err
 		}
@@ -176,6 +183,29 @@ var InitSetting = &gormigrate.Migration{
 			return err
 		}
 		if err := tx.Create(&model.Setting{Key: "UninstallDeleteBackup", Value: constant.StatusDisable}).Error; err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var AddPasskeySetting = &gormigrate.Migration{
+	ID: "20250910-add-passkey-setting",
+	Migrate: func(tx *gorm.DB) error {
+		var addSettingsIfMissing = func(tx *gorm.DB, key, value string) error {
+			var setting model.Setting
+			if err := tx.Where("key = ?", key).First(&setting).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return tx.Create(&model.Setting{Key: key, Value: value}).Error
+				}
+				return err
+			}
+			return nil
+		}
+		if err := addSettingsIfMissing(tx, "PasskeyUserID", ""); err != nil {
+			return err
+		}
+		if err := addSettingsIfMissing(tx, "PasskeyCredentials", ""); err != nil {
 			return err
 		}
 		return nil

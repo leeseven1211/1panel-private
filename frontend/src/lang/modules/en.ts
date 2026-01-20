@@ -195,6 +195,7 @@ const message = {
         login: {
             username: 'Username',
             password: 'Password',
+            passkey: 'Passkey Login',
             welcome: 'Welcome back, please enter your username and password to log in!',
             errorAuthInfo: 'The user name or password you entered is incorrect, please re-enter!',
             errorMfaInfo: 'Incorrect authentication information, please try again!',
@@ -216,6 +217,10 @@ const message = {
             agreeTitle: 'Agreement',
             agreeContent:
                 'In order to better protect your legitimate rights and interests, please read and agree to the following agreement &laquo; <a href = "https://www.fit2cloud.com/legal/licenses.html" target = "_blank" > Community License Agreement </a> &raquo;',
+            passkeyFailed: 'Passkey login failed, please try again',
+            passkeyNotSupported:
+                'Current browser or environment does not support passkeys, please confirm you have bound the domain name and enabled the panel SSL, and used a trusted certificate when accessing',
+            passkeyToPassword: 'Have trouble using a passkey? Use password instead',
         },
         rule: {
             username: 'Enter a username',
@@ -1930,6 +1935,21 @@ const message = {
         path: 'Path',
 
         safe: 'Security',
+        passkey: 'Passkey',
+        passkeyManage: 'Manage',
+        passkeyHelper: 'For quick login, up to 5 passkeys can be bound',
+        passkeyRequireSSL: 'Enable HTTPS to use passkeys',
+        passkeyNotSupported: 'Current browser or environment does not support passkeys',
+        passkeyCount: 'Bound {0}/{1}',
+        passkeyName: 'Name',
+        passkeyNameHelper: 'Enter a name to distinguish devices',
+        passkeyAdd: 'Add Passkey',
+        passkeyCreatedAt: 'Created At',
+        passkeyLastUsedAt: 'Last Used',
+        passkeyDeleteConfirm: 'After deletion, this passkey cannot be used to log in. Continue?',
+        passkeyLimit: 'Up to 5 passkeys can be bound',
+        passkeyFailed:
+            'Passkey registration failed, please confirm that the panel SSL certificate is a trusted certificate',
         bindInfo: 'Bind info',
         bindAll: 'Listen All',
         bindInfoHelper:
