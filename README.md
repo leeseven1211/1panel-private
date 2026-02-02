@@ -44,12 +44,8 @@
 Execute the script below and follow the prompts to install 1Panel:
 
 ```bash
-curl -sSL https://resource.1panel.pro/quick_start.sh -o quick_start.sh && bash quick_start.sh
+bash -c "$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh)"
 ```
-
-Please refer to our [documentation](https://docs.1panel.pro/quick_start/) for more details.
-
-中国用户请使用这个 [安装脚本](https://1panel.cn/docs/installation/online_installation/)，其应用数量比国际版本更丰富。
 
 ## Screenshot
 
