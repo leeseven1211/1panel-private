@@ -68,7 +68,9 @@ func (a AppService) createSyncAppStoreTask(sharedCtx **appSyncContext) func(t *t
 		}
 
 		settingService := NewISettingService()
-		_ = settingService.Update("AppStoreSyncStatus", constant.StatusSyncing)
+		if err := settingService.Update("AppStoreSyncStatus", constant.StatusSyncing); err != nil {
+			global.LOG.Warnf("[AppStore] failed to update sync status to syncing: %v", err)
+		}
 
 		setting, err := settingService.GetSettingInfo()
 		if err != nil {
@@ -111,8 +113,12 @@ func (a AppService) createSyncAppStoreTask(sharedCtx **appSyncContext) func(t *t
 			return err
 		}
 
-		_ = settingService.Update("AppStoreSyncStatus", constant.StatusSyncSuccess)
-		_ = settingService.Update("AppStoreLastModified", strconv.Itoa(list.LastModified))
+		if err := settingService.Update("AppStoreSyncStatus", constant.StatusSyncSuccess); err != nil {
+			global.LOG.Warnf("[AppStore] failed to update sync status to success: %v", err)
+		}
+		if err := settingService.Update("AppStoreLastModified", strconv.Itoa(list.LastModified)); err != nil {
+			global.LOG.Warnf("[AppStore] failed to update last modified: %v", err)
+		}
 		global.LOG.Infof("[AppStore] Appstore sync completed")
 
 		*sharedCtx = ctx
@@ -342,6 +348,31 @@ func (c *appSyncContext) classifyAndPersistAppsWithStats(addCount, updateCount, 
 		}
 	}
 
+	if len(addAppArray) > 0 {
+		addKeys := make([]string, 0, len(addAppArray))
+		for _, app := range addAppArray {
+			addKeys = append(addKeys, app.Key)
+		}
+		existingApps, _ := appRepo.GetBy(appRepo.WithKeyIn(addKeys))
+		if len(existingApps) > 0 {
+			existingMap := make(map[string]model.App, len(existingApps))
+			for _, e := range existingApps {
+				existingMap[e.Key] = e
+			}
+			filteredAdd := make([]model.App, 0, len(addAppArray))
+			for _, app := range addAppArray {
+				if existing, ok := existingMap[app.Key]; ok {
+					app.ID = existing.ID
+					app.Details = existing.Details
+					updateAppArray = append(updateAppArray, app)
+				} else {
+					filteredAdd = append(filteredAdd, app)
+				}
+			}
+			addAppArray = filteredAdd
+		}
+	}
+
 	*addCount = len(addAppArray)
 	*updateCount = len(updateAppArray)
 	*deleteCount = len(deleteAppArray)
@@ -394,13 +425,10 @@ func (c *appSyncContext) classifyAndPersistAppsWithStats(addCount, updateCount, 
 		for _, tag := range app.TagsKey {
 			tagId, ok := tagMap[tag]
 			if ok {
-				exist, _ := appTagRepo.GetFirst(ctx, appTagRepo.WithByTagID(tagId), appTagRepo.WithByAppID(app.ID))
-				if exist == nil {
-					c.appTags = append(c.appTags, &model.AppTag{
-						AppId: app.ID,
-						TagId: tagId,
-					})
-				}
+				c.appTags = append(c.appTags, &model.AppTag{
+					AppId: app.ID,
+					TagId: tagId,
+				})
 			}
 		}
 
@@ -449,8 +477,19 @@ func (c *appSyncContext) classifyAndPersistAppsWithStats(addCount, updateCount, 
 		}
 	}
 
-	if len(c.oldAppIds) > 0 {
-		if err = appTagRepo.DeleteByAppIds(ctx, deleteIds); err != nil {
+	syncedAppIds := make([]uint, 0, len(addAppArray)+len(updateAppArray)+len(deleteIds))
+	for _, app := range addAppArray {
+		if app.ID > 0 {
+			syncedAppIds = append(syncedAppIds, app.ID)
+		}
+	}
+	for _, app := range updateAppArray {
+		syncedAppIds = append(syncedAppIds, app.ID)
+	}
+	syncedAppIds = append(syncedAppIds, deleteIds...)
+
+	if len(syncedAppIds) > 0 {
+		if err = appTagRepo.DeleteByAppIds(ctx, syncedAppIds); err != nil {
 			return
 		}
 	}
@@ -461,6 +500,8 @@ func (c *appSyncContext) classifyAndPersistAppsWithStats(addCount, updateCount, 
 		}
 	}
 
-	tx.Commit()
+	if err = tx.Commit().Error; err != nil {
+		return
+	}
 	return nil
 }

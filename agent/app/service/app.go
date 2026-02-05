@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 
@@ -32,6 +33,11 @@ import (
 	"github.com/1Panel-dev/1Panel/agent/utils/req_helper"
 	"github.com/1Panel-dev/1Panel/agent/utils/xpack"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	appStoreSyncMu  sync.Mutex
+	appStoreSyncing bool
 )
 
 type AppService struct {
@@ -840,6 +846,13 @@ func (a AppService) GetAppUpdate() (*response.AppUpdateRes, error) {
 			res.CanUpdate = true
 			return res, err
 		}
+		if appicon.IsIconFile(app.Icon) {
+			fileName, _ := appicon.ParseIconField(app.Icon)
+			if fileName == "" || !appicon.IconFileExists(fileName) {
+				res.CanUpdate = true
+				return res, err
+			}
+		}
 	}
 
 	list, err := getAppList()
@@ -897,33 +910,61 @@ var InitTypes = map[string]struct{}{
 }
 
 func deleteCustomApp() {
+	installs, err := appInstallRepo.ListBy(context.Background())
+	if err != nil {
+		global.LOG.Errorf("[AppStore] deleteCustomApp: failed to list installs, skipping: %v", err)
+		return
+	}
 	var appIDS []uint
-	installs, _ := appInstallRepo.ListBy(context.Background())
 	for _, install := range installs {
 		appIDS = append(appIDS, install.AppId)
 	}
 	var ops []repo.DBOption
-	ops = append(ops, repo.WithByIDNotIn(appIDS))
 	if len(appIDS) > 0 {
 		ops = append(ops, repo.WithByIDNotIn(appIDS))
 	}
-	apps, _ := appRepo.GetBy(ops...)
+	apps, err := appRepo.GetBy(ops...)
+	if err != nil {
+		global.LOG.Errorf("[AppStore] deleteCustomApp: failed to get apps, skipping: %v", err)
+		return
+	}
 	var deleteIDS []uint
 	for _, app := range apps {
 		if app.Resource == constant.AppResourceCustom {
 			deleteIDS = append(deleteIDS, app.ID)
 		}
 	}
-	_ = appRepo.DeleteByIDs(context.Background(), deleteIDS)
-	_ = appDetailRepo.DeleteByAppIds(context.Background(), deleteIDS)
+	if len(deleteIDS) == 0 {
+		return
+	}
+	if err = appRepo.DeleteByIDs(context.Background(), deleteIDS); err != nil {
+		global.LOG.Errorf("[AppStore] deleteCustomApp: failed to delete apps: %v", err)
+	}
+	if err = appDetailRepo.DeleteByAppIds(context.Background(), deleteIDS); err != nil {
+		global.LOG.Errorf("[AppStore] deleteCustomApp: failed to delete app details: %v", err)
+	}
 }
 
 func (a AppService) SyncAppListFromRemote(taskID string) (err error) {
 	if xpack.IsUseCustomApp() {
 		return nil
 	}
+
+	appStoreSyncMu.Lock()
+	global.LOG.Info("[AppStore] sync app from remote task create start")
+	if appStoreSyncing {
+		appStoreSyncMu.Unlock()
+		global.LOG.Info("[AppStore] sync already in progress, skipping")
+		return nil
+	}
+	appStoreSyncing = true
+	appStoreSyncMu.Unlock()
+
 	syncTask, err := task.NewTaskWithOps(i18n.GetMsgByKey("App"), task.TaskSync, task.TaskScopeAppStore, taskID, 0)
 	if err != nil {
+		appStoreSyncMu.Lock()
+		appStoreSyncing = false
+		appStoreSyncMu.Unlock()
 		return err
 	}
 
@@ -933,13 +974,29 @@ func (a AppService) SyncAppListFromRemote(taskID string) (err error) {
 	syncTask.AddSubTask(i18n.GetMsgByKey("SyncAppDetail"), a.createSyncAppStoreMetaTask(&sharedCtx), nil)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				global.LOG.Errorf("[AppStore] sync goroutine recovered from panic: %v", r)
+				if updateErr := NewISettingService().Update("AppStoreSyncStatus", constant.StatusError); updateErr != nil {
+					global.LOG.Warnf("[AppStore] failed to update sync status after panic: %v", updateErr)
+				}
+			}
+			appStoreSyncMu.Lock()
+			appStoreSyncing = false
+			appStoreSyncMu.Unlock()
+		}()
 		if err := syncTask.Execute(); err != nil {
-			_ = NewISettingService().Update("AppStoreLastModified", "0")
-			_ = NewISettingService().Update("AppStoreSyncStatus", constant.StatusError)
+			if updateErr := NewISettingService().Update("AppStoreLastModified", "0"); updateErr != nil {
+				global.LOG.Warnf("[AppStore] failed to reset last modified: %v", updateErr)
+			}
+			if updateErr := NewISettingService().Update("AppStoreSyncStatus", constant.StatusError); updateErr != nil {
+				global.LOG.Warnf("[AppStore] failed to update sync status to error: %v", updateErr)
+			}
 			return
 		}
 	}()
 
+	global.LOG.Info("[AppStore] sync app from remote task create ok")
 	return nil
 }
 
