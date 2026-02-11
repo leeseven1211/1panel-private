@@ -1,5 +1,4 @@
 <p align="center"><a href="https://1panel.pro"><img src="https://resource.1panel.pro/img/1panel-logo.png" alt="1Panel" width="300" /></a></p>
-<p align="center"><b>1Panel is the best tool for deploying and managing OpenClaw on a VPS.</b><br></p>
 <p align="center">
   <a href="https://trendshift.io/repositories/2462" target="_blank"><img src="https://trendshift.io/api/badge/repositories/2462" alt="1Panel-dev%2F1Panel | Trendshift" style="width: 240px; height: auto;" /></a>
 </p>
@@ -31,13 +30,27 @@
 
 ------------------------------
 
-1Panel is an open-source, modern web-based control panel for Linux server management.
+1Panel is a modern, open-source Linux server management panel that streamlines administration through an intuitive, clean web interface.
 
-- **Efficient Management**: Through a user-friendly web graphical interface, 1Panel enables users to effortlessly manage their Linux servers. Key features include host monitoring, file management, database administration, container management, LLMs management.
-- **Rapid Website Deployment**: With deep integration of the popular open-source website building software WordPress, 1Panel streamlines the process of domain binding and SSL certificate configuration, all achievable with just one click.
-- **Application Store**: 1Panel curates a wide range of high-quality open-source applications(like OpenClaw and Ollama), facilitating easy installation and updates for its users.
-- **Security and Reliability**: By leveraging containerization and secure application deployment practices, 1Panel minimizes vulnerability exposure. It further enhances security through integrated firewall management and log auditing capabilities.
-- **One-Click Backup & Restore**: Data protection is made simple with 1Panel's one-click backup and restore functionality, supporting various cloud storage solutions to ensure data integrity and availability.
+✨ Key Features  
+
+🔹 AI Integration  
+Seamlessly deploy OpenClaw agents, host local LLMs via Ollama, and monitor GPU utilization—all within a unified workspace engineered for efficient AI development and inference.  
+
+🔹 One-Click Website Deployment  
+Launch production-ready websites instantly with automatic domain binding, SSL certificate provisioning, and configuration—zero manual setup required.  
+
+🔹 Curated App Marketplace  
+Discover, install, and update trusted open-source applications (WordPress, MySQL, Redis, and more) with a single click.  
+
+🔹 Centralized Server Management  
+Monitor system resources and manage files, databases, containers, and services effortlessly through a unified, intuitive dashboard.  
+
+🔹 Enterprise-Grade Security  
+Strengthen defenses with container isolation, firewall controls, audit logging, and secure deployment practices—ensuring compliance and peace of mind.  
+
+🔹 Intelligent Backup & Restore  
+Schedule automated backups or perform instant restores to local storage or leading cloud platforms (AWS S3, Cloudflare R2, and more), with flexible retention and destination options.
 
 ## Quick Start
 
