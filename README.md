@@ -29,27 +29,28 @@
 </p>
 
 ------------------------------
+## What is 1Panel? 
 
 1Panel is a modern, open-source Linux server management panel that streamlines administration through an intuitive, clean web interface.
 
-✨ Key Features  
+## Key Features  
 
-🔹 AI Integration  
+🔹 **AI Integration**  
 Seamlessly deploy OpenClaw agents, host local LLMs via Ollama, and monitor GPU utilization—all within a unified workspace engineered for efficient AI development and inference.  
 
-🔹 One-Click Website Deployment  
+🔹 **One-Click Website Deployment**  
 Launch production-ready websites instantly with automatic domain binding, SSL certificate provisioning, and configuration—zero manual setup required.  
 
-🔹 Curated App Marketplace  
+🔹 **Curated App Marketplace**  
 Discover, install, and update trusted open-source applications (WordPress, MySQL, Redis, and more) with a single click.  
 
-🔹 Centralized Server Management  
+🔹 **Centralized Server Management**  
 Monitor system resources and manage files, databases, containers, and services effortlessly through a unified, intuitive dashboard.  
 
-🔹 Enterprise-Grade Security  
+🔹 **Enterprise-Grade Security**  
 Strengthen defenses with container isolation, firewall controls, audit logging, and secure deployment practices—ensuring compliance and peace of mind.  
 
-🔹 Intelligent Backup & Restore  
+🔹 **Intelligent Backup & Restore**  
 Schedule automated backups or perform instant restores to local storage or leading cloud platforms (AWS S3, Cloudflare R2, and more), with flexible retention and destination options.
 
 ## Quick Start
