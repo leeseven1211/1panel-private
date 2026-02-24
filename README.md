@@ -31,12 +31,12 @@
 ------------------------------
 ## What is 1Panel? 
 
-1Panel is a modern, open-source Linux server management panel that streamlines administration through an intuitive, clean web interface.
+1Panel is a modern, open-source Linux server management panel that streamlines administration through an intuitive, clean web interface. 
 
 ## Key Features  
 
 🔹 **AI Integration**  
-Seamlessly deploy OpenClaw agents, host local LLMs via Ollama, and monitor GPU utilization—all within a unified workspace engineered for efficient AI development and inference.  
+Seamlessly deploy OpenClaw agents, host local LLMs via Ollama, and monitor GPU utilization—all within a unified workspace.  
 
 🔹 **One-Click Website Deployment**  
 Launch production-ready websites instantly with automatic domain binding, SSL certificate provisioning, and configuration—zero manual setup required.  
