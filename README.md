@@ -31,11 +31,13 @@
 ------------------------------
 ## What is 1Panel? 
 
-1Panel is a modern, open-source Linux server management panel that streamlines administration through an intuitive, clean web interface. 
+Take control of your VPS with 1Panel. 
+
+1Panel is a modern, open-source VPS control panel that streamlines administration through an intuitive, clean web interface. 
 
 ## Key Features  
 
-🔹 **AI Integration**  
+🔹 **One-Click OpenClaw Deployment**  
 Seamlessly deploy OpenClaw agents, host local LLMs via Ollama, and monitor GPU utilization—all within a unified workspace.  
 
 🔹 **One-Click Website Deployment**  
