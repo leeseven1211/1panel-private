@@ -62,7 +62,10 @@ var resetSSLCmd = &cobra.Command{
 			return err
 		}
 
-		return setSettingByKey(db, "SSL", constant.StatusDisable)
+		if err := setSettingByKey(db, "SSL", constant.StatusDisable); err != nil {
+			return err
+		}
+		return nil
 	},
 }
 var resetEntranceCmd = &cobra.Command{
@@ -94,7 +97,10 @@ var resetBindIpsCmd = &cobra.Command{
 			return err
 		}
 
-		return setSettingByKey(db, "AllowIPs", "")
+		if err := setSettingByKey(db, "AllowIPs", ""); err != nil {
+			return err
+		}
+		return nil
 	},
 }
 var resetDomainCmd = &cobra.Command{
@@ -110,7 +116,10 @@ var resetDomainCmd = &cobra.Command{
 			return err
 		}
 
-		return setSettingByKey(db, "BindDomain", "")
+		if err := setSettingByKey(db, "BindDomain", ""); err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
