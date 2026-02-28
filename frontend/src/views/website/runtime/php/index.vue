@@ -5,7 +5,7 @@
         <LayoutContent v-loading="loading" v-if="isExist" :class="{ mask: !isActive }">
             <template #leftToolBar>
                 <el-button type="primary" @click="openCreate">
-                    {{ $t('runtime.create') }}
+                    {{ $t('commons.button.create') }}
                 </el-button>
 
                 <el-button type="primary" plain @click="openExtensions">
