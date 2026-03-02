@@ -1,10 +1,52 @@
 <template>
     <DrawerPro v-model="drawerVisible" :header="$t('setting.passkey')" @close="handleClose" size="large">
+        <div class="mb-4">
+            <el-alert
+                v-if="!allPrerequisitesMet"
+                :title="$t('setting.passkeyPrereqTitle')"
+                type="warning"
+                :closable="false"
+                class="mb-4"
+            >
+                <template #default>
+                    <div class="flex flex-col gap-2 mt-2">
+                        <div class="flex items-center gap-2">
+                            <el-icon :color="prereqBindDomain ? '#67c23a' : '#f56c6c'">
+                                <Check v-if="prereqBindDomain" />
+                                <Close v-else />
+                            </el-icon>
+                            <span>{{ $t('setting.passkeyPrereqBindDomain') }}</span>
+                            <el-button v-if="!prereqBindDomain" link type="primary" @click="goConfigureDomain">
+                                {{ $t('setting.passkeyPrereqGoSetup') }}
+                            </el-button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <el-icon :color="prereqHttps ? '#67c23a' : '#f56c6c'">
+                                <Check v-if="prereqHttps" />
+                                <Close v-else />
+                            </el-icon>
+                            <span>{{ $t('setting.passkeyPrereqHttps') }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <el-icon :color="prereqBrowser ? '#67c23a' : '#f56c6c'">
+                                <Check v-if="prereqBrowser" />
+                                <Close v-else />
+                            </el-icon>
+                            <span>{{ $t('setting.passkeyPrereqBrowser') }}</span>
+                        </div>
+                    </div>
+                </template>
+            </el-alert>
+        </div>
         <el-tabs v-model="activeTab" type="border-card">
             <el-tab-pane :label="$t('setting.passkeyKeyManagement')" name="keys">
                 <el-form label-position="top">
                     <el-form-item :label="$t('setting.passkeyName')">
-                        <el-input v-model.trim="passkeyForm.name" :placeholder="$t('setting.passkeyNameHelper')" />
+                        <el-input
+                            v-model.trim="passkeyForm.name"
+                            :placeholder="$t('setting.passkeyNameHelper')"
+                            :disabled="!allPrerequisitesMet"
+                        />
                     </el-form-item>
                     <el-button type="primary" @click="registerPasskey" :disabled="!canRegisterPasskey">
                         {{ $t('setting.passkeyAdd') }}
@@ -21,7 +63,12 @@
                     </el-table-column>
                     <el-table-column :label="$t('commons.table.operate')" width="120">
                         <template #default="scope">
-                            <el-button link type="danger" @click="removePasskey(scope.row.id)">
+                            <el-button
+                                link
+                                type="danger"
+                                :disabled="!allPrerequisitesMet"
+                                @click="removePasskey(scope.row.id)"
+                            >
                                 {{ $t('commons.button.delete') }}
                             </el-button>
                         </template>
@@ -55,6 +102,7 @@
 
 <script lang="ts" setup>
 import { computed, reactive, ref } from 'vue';
+import { Check, Close } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import {
     getSettingInfo,
@@ -71,8 +119,9 @@ import { base64UrlToBuffer, bufferToBase64Url } from '@/utils/util';
 
 interface DrawerParams {
     bindDomain: string;
-    supported: boolean;
 }
+
+const emit = defineEmits(['go-configure-domain']);
 
 const activeTab = ref('keys');
 const drawerVisible = ref(false);
@@ -81,9 +130,13 @@ const savePasskeyProxyLoading = ref(false);
 const passkeyList = ref<Setting.PasskeyInfo[]>([]);
 const passkeyForm = reactive({ name: '' });
 const passkeyTrustedProxies = ref('');
-const passkeySupported = ref(false);
 const hasBindDomain = ref(false);
 const passkeyMaxCount = 5;
+
+const prereqBindDomain = computed(() => hasBindDomain.value);
+const prereqHttps = computed(() => window.isSecureContext);
+const prereqBrowser = computed(() => !!window.PublicKeyCredential);
+const allPrerequisitesMet = computed(() => prereqBindDomain.value && prereqHttps.value && prereqBrowser.value);
 
 const passkeyCountText = computed(() => {
     return i18n.global.t('setting.passkeyCount', [passkeyList.value.length, passkeyMaxCount]);
@@ -91,16 +144,12 @@ const passkeyCountText = computed(() => {
 
 const canRegisterPasskey = computed(() => {
     return (
-        hasBindDomain.value &&
-        passkeySupported.value &&
-        passkeyList.value.length < passkeyMaxCount &&
-        passkeyForm.name.trim().length > 0
+        allPrerequisitesMet.value && passkeyList.value.length < passkeyMaxCount && passkeyForm.name.trim().length > 0
     );
 });
 
 const acceptParams = async (params: DrawerParams) => {
     hasBindDomain.value = params.bindDomain.trim().length > 0;
-    passkeySupported.value = params.supported;
     drawerVisible.value = true;
     await loadPasskeyTrustedProxies();
     await loadPasskeys();
@@ -128,12 +177,7 @@ const loadPasskeys = async () => {
 };
 
 const registerPasskey = async () => {
-    if (!hasBindDomain.value) {
-        MsgError(i18n.global.t('setting.passkeyRequireSSL'));
-        return;
-    }
-    if (!passkeySupported.value) {
-        MsgError(i18n.global.t('setting.passkeyNotSupported'));
+    if (!allPrerequisitesMet.value) {
         return;
     }
     if (passkeyList.value.length >= passkeyMaxCount) {
@@ -221,6 +265,11 @@ const buildPasskeyAttestation = (credential: PublicKeyCredential) => {
         clientExtensionResults: credential.getClientExtensionResults(),
         authenticatorAttachment: credential.authenticatorAttachment,
     };
+};
+
+const goConfigureDomain = () => {
+    drawerVisible.value = false;
+    emit('go-configure-domain');
 };
 
 const handleClose = () => {
