@@ -33,6 +33,9 @@
                                 <Close v-else />
                             </el-icon>
                             <span>{{ $t('setting.passkeyPrereqBrowser') }}</span>
+                            <span v-if="!prereqBrowser && prereqBrowserDetail" class="text-xs text-gray-500">
+                                {{ prereqBrowserDetail }}
+                            </span>
                         </div>
                     </div>
                 </template>
@@ -135,7 +138,14 @@ const passkeyMaxCount = 5;
 
 const prereqBindDomain = computed(() => hasBindDomain.value);
 const prereqHttps = computed(() => window.isSecureContext);
-const prereqBrowser = computed(() => !!window.PublicKeyCredential);
+const prereqBrowser = ref(false);
+const prereqBrowserDetailKey = ref('');
+const prereqBrowserDetail = computed(() => {
+    if (!prereqBrowserDetailKey.value) {
+        return '';
+    }
+    return i18n.global.t(prereqBrowserDetailKey.value);
+});
 const allPrerequisitesMet = computed(() => prereqBindDomain.value && prereqHttps.value && prereqBrowser.value);
 
 const passkeyCountText = computed(() => {
@@ -148,8 +158,31 @@ const canRegisterPasskey = computed(() => {
     );
 });
 
+const checkPasskeyBrowserSupport = async () => {
+    prereqBrowser.value = false;
+    prereqBrowserDetailKey.value = '';
+    const credentialApi = window.PublicKeyCredential;
+    if (!credentialApi) {
+        prereqBrowserDetailKey.value = 'setting.passkeyPrereqBrowserDetailWebAuthnUnavailable';
+        return;
+    }
+    if (typeof credentialApi.isUserVerifyingPlatformAuthenticatorAvailable !== 'function') {
+        prereqBrowserDetailKey.value = 'setting.passkeyPrereqBrowserDetailPlatformCapabilityUnavailable';
+        return;
+    }
+    try {
+        prereqBrowser.value = await credentialApi.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (!prereqBrowser.value) {
+            prereqBrowserDetailKey.value = 'setting.passkeyPrereqBrowserDetailNoPlatformAuthenticator';
+        }
+    } catch (error) {
+        prereqBrowserDetailKey.value = 'setting.passkeyPrereqBrowserDetailDetectFailed';
+    }
+};
+
 const acceptParams = async (params: DrawerParams) => {
     hasBindDomain.value = params.bindDomain.trim().length > 0;
+    await checkPasskeyBrowserSupport();
     drawerVisible.value = true;
     await loadPasskeyTrustedProxies();
     await loadPasskeys();

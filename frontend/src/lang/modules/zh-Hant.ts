@@ -1964,9 +1964,15 @@ const message = {
             '僅當請求來源命中以下 IP/CIDR 時，才會信任 Forwarded 與 X-Forwarded-Proto 判斷 HTTPS',
         passkeyNotSupported: '目前瀏覽器或環境不支援通行金鑰，請確認網域與 HTTPS',
         passkeyPrereqTitle: '使用通行金鑰需滿足以下前置條件',
-        passkeyPrereqBindDomain: '已綁定網域',
-        passkeyPrereqHttps: 'HTTPS 安全上下文',
-        passkeyPrereqBrowser: '瀏覽器支援 WebAuthn',
+        passkeyPrereqBindDomain: '已設定 1Panel 網域綁定',
+        passkeyPrereqHttps: '已透過 HTTPS 安全存取',
+        passkeyPrereqBrowser: '目前環境支援 Passkey（WebAuthn + 平台驗證器）',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable: '請使用系統瀏覽器存取，並確認已綁定網域且透過 HTTPS 開啟面板',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            '目前環境無法使用裝置認證，請改用系統瀏覽器並確認系統版本較新',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            '請先在系統中啟用螢幕鎖定/指紋/臉部辨識/Windows Hello 後重試',
+        passkeyPrereqBrowserDetailDetectFailed: '環境檢測失敗，請重新整理後重試，或改用系統瀏覽器存取',
         passkeyPrereqGoSetup: '去設定',
         passkeyCount: '已綁定 {0}/{1}',
         passkeyName: '名稱',

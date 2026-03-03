@@ -1995,9 +1995,16 @@ const message = {
             'Only requests from these IP/CIDR sources will trust Forwarded and X-Forwarded-Proto when determining HTTPS',
         passkeyNotSupported: 'Current browser or environment does not support passkeys',
         passkeyPrereqTitle: 'The following prerequisites are required for Passkey',
-        passkeyPrereqBindDomain: 'Domain name configured',
-        passkeyPrereqHttps: 'HTTPS / Secure context',
-        passkeyPrereqBrowser: 'Browser supports WebAuthn',
+        passkeyPrereqBindDomain: '1Panel domain binding configured',
+        passkeyPrereqHttps: 'Accessed securely via HTTPS',
+        passkeyPrereqBrowser: 'Environment supports Passkey (WebAuthn + platform authenticator)',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            'Use a system browser and make sure the panel is opened over HTTPS with a bound domain.',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            'This environment cannot use device authentication. Try a system browser on a newer OS version.',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            'Enable screen lock / fingerprint / face unlock / Windows Hello, then try again.',
+        passkeyPrereqBrowserDetailDetectFailed: 'Detection failed. Refresh and retry, or switch to a system browser.',
         passkeyPrereqGoSetup: 'Configure',
         passkeyCount: 'Bound {0}/{1}',
         passkeyName: 'Name',

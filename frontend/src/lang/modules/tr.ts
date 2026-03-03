@@ -2024,9 +2024,17 @@ const message = {
             'Sadece bu IP/CIDR kaynaklarından gelen isteklerde Forwarded ve X-Forwarded-Proto HTTPS belirlenmesinde kullanılır',
         passkeyNotSupported: 'Tarayıcı/ortam passkey desteklemiyor; alan adı ve HTTPS erişimini doğrulayın',
         passkeyPrereqTitle: 'Passkey için aşağıdaki ön koşullar gereklidir',
-        passkeyPrereqBindDomain: 'Alan adı yapılandırıldı',
-        passkeyPrereqHttps: 'HTTPS / Güvenli bağlam',
-        passkeyPrereqBrowser: 'Tarayıcı WebAuthn destekliyor',
+        passkeyPrereqBindDomain: '1Panel alan adı bağlama yapılandırıldı',
+        passkeyPrereqHttps: 'HTTPS üzerinden güvenli erişim sağlandı',
+        passkeyPrereqBrowser: 'Ortam Passkey destekliyor (WebAuthn + platform doğrulayıcı)',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            'Sistem tarayıcısı kullanın ve panelin HTTPS üzerinden, bağlı bir alan adıyla açıldığını doğrulayın.',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            'Bu ortam cihaz kimlik doğrulamasını kullanamıyor. Daha yeni bir işletim sisteminde sistem tarayıcısını deneyin.',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            "Ekran kilidi / parmak izi / yüz tanıma / Windows Hello'yu etkinleştirip tekrar deneyin.",
+        passkeyPrereqBrowserDetailDetectFailed:
+            'Algılama başarısız oldu. Sayfayı yenileyip tekrar deneyin veya sistem tarayıcısına geçin.',
         passkeyPrereqGoSetup: 'Yapılandır',
         passkeyCount: 'Bağlı {0}/{1}',
         passkeyName: 'Ad',

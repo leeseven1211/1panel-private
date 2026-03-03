@@ -1987,9 +1987,17 @@ const message = {
             'Только запросы с этих IP/CIDR будут доверять заголовкам Forwarded и X-Forwarded-Proto при определении HTTPS',
         passkeyNotSupported: 'Текущий браузер или среда не поддерживает passkey; проверьте домен и HTTPS',
         passkeyPrereqTitle: 'Для использования Passkey необходимо выполнить следующие условия',
-        passkeyPrereqBindDomain: 'Домен настроен',
-        passkeyPrereqHttps: 'HTTPS / Безопасный контекст',
-        passkeyPrereqBrowser: 'Браузер поддерживает WebAuthn',
+        passkeyPrereqBindDomain: 'Настроена привязка домена 1Panel',
+        passkeyPrereqHttps: 'Безопасный доступ по HTTPS',
+        passkeyPrereqBrowser: 'Среда поддерживает Passkey (WebAuthn + платформенный аутентификатор)',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            'Используйте системный браузер и убедитесь, что панель открыта по HTTPS с привязанным доменом.',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            'В этой среде нельзя использовать аутентификацию устройства. Попробуйте системный браузер на более новой версии ОС.',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            'Включите блокировку экрана / отпечаток / Face ID / Windows Hello и повторите попытку.',
+        passkeyPrereqBrowserDetailDetectFailed:
+            'Не удалось выполнить проверку. Обновите страницу и попробуйте снова или перейдите в системный браузер.',
         passkeyPrereqGoSetup: 'Настроить',
         passkeyCount: 'Привязано {0}/{1}',
         passkeyName: 'Название',

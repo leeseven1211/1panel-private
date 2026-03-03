@@ -2000,9 +2000,17 @@ const message = {
             'Hanya permintaan daripada IP/CIDR ini akan mempercayai Forwarded dan X-Forwarded-Proto untuk menentukan HTTPS',
         passkeyNotSupported: 'Pelayar atau persekitaran semasa tidak menyokong passkey',
         passkeyPrereqTitle: 'Prasyarat berikut diperlukan untuk Passkey',
-        passkeyPrereqBindDomain: 'Nama domain dikonfigurasi',
-        passkeyPrereqHttps: 'HTTPS / Konteks selamat',
-        passkeyPrereqBrowser: 'Pelayar menyokong WebAuthn',
+        passkeyPrereqBindDomain: 'Pengikatan domain 1Panel dikonfigurasi',
+        passkeyPrereqHttps: 'Akses selamat melalui HTTPS',
+        passkeyPrereqBrowser: 'Persekitaran menyokong Passkey (WebAuthn + pengesah platform)',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            'Gunakan pelayar sistem dan pastikan panel dibuka melalui HTTPS dengan domain yang telah diikat.',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            'Persekitaran ini tidak boleh menggunakan pengesahan peranti. Cuba pelayar sistem pada versi OS yang lebih baharu.',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            'Aktifkan kunci skrin / cap jari / pengecaman wajah / Windows Hello, kemudian cuba lagi.',
+        passkeyPrereqBrowserDetailDetectFailed:
+            'Pengesanan gagal. Muat semula dan cuba lagi, atau tukar ke pelayar sistem.',
         passkeyPrereqGoSetup: 'Konfigurasi',
         passkeyCount: 'Dipaut {0}/{1}',
         passkeyName: 'Nama',

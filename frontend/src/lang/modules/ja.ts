@@ -1946,9 +1946,17 @@ const message = {
             '以下の IP/CIDR からのリクエストのみが Forwarded/X-Forwarded-Proto を HTTPS 判定に使います',
         passkeyNotSupported: 'ブラウザまたは環境がパスキー非対応です。ドメインと HTTPS を確認してください',
         passkeyPrereqTitle: 'Passkey を使用するには次の前提条件が必要です',
-        passkeyPrereqBindDomain: 'ドメイン名が設定済み',
-        passkeyPrereqHttps: 'HTTPS / セキュアコンテキスト',
-        passkeyPrereqBrowser: 'ブラウザが WebAuthn をサポート',
+        passkeyPrereqBindDomain: '1Panel のドメインバインド設定済み',
+        passkeyPrereqHttps: 'HTTPS で安全にアクセス済み',
+        passkeyPrereqBrowser: '現在の環境が Passkey（WebAuthn + プラットフォーム認証器）に対応',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            'システムブラウザでアクセスし、ドメイン設定済みかつ HTTPS で開いていることを確認してください',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            'この環境ではデバイス認証を利用できません。新しい OS のシステムブラウザでお試しください',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            '画面ロック/指紋/Face ID/Windows Hello を有効化してから再試行してください',
+        passkeyPrereqBrowserDetailDetectFailed:
+            '環境検出に失敗しました。ページを更新して再試行するか、システムブラウザをご利用ください',
         passkeyPrereqGoSetup: '設定する',
         passkeyCount: '登録済み {0}/{1}',
         passkeyName: '名称',

@@ -1920,9 +1920,17 @@ const message = {
             '이 IP/CIDR 출처의 요청만 Forwarded와 X-Forwarded-Proto 헤더를 HTTPS 판단에 사용합니다',
         passkeyNotSupported: '브라우저/환경이 패스키를 지원하지 않습니다. 도메인과 HTTPS를 확인하세요',
         passkeyPrereqTitle: 'Passkey 사용을 위해 다음 전제 조건이 필요합니다',
-        passkeyPrereqBindDomain: '도메인 이름 구성됨',
-        passkeyPrereqHttps: 'HTTPS / 보안 컨텍스트',
-        passkeyPrereqBrowser: '브라우저가 WebAuthn을 지원합니다',
+        passkeyPrereqBindDomain: '1Panel 도메인 바인딩 구성됨',
+        passkeyPrereqHttps: 'HTTPS를 통해 안전하게 접속됨',
+        passkeyPrereqBrowser: '현재 환경이 Passkey를 지원합니다 (WebAuthn + 플랫폼 인증기)',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            '시스템 브라우저로 접속하고, 바인딩된 도메인으로 HTTPS에서 패널을 열었는지 확인하세요.',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            '현재 환경에서는 기기 인증을 사용할 수 없습니다. 더 최신 OS의 시스템 브라우저에서 시도하세요.',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            '화면 잠금/지문/얼굴 인식/Windows Hello를 활성화한 뒤 다시 시도하세요.',
+        passkeyPrereqBrowserDetailDetectFailed:
+            '감지에 실패했습니다. 페이지를 새로고침 후 다시 시도하거나 시스템 브라우저로 전환하세요.',
         passkeyPrereqGoSetup: '설정',
         passkeyCount: '등록됨 {0}/{1}',
         passkeyName: '이름',

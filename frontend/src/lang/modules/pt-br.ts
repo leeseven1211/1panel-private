@@ -1987,9 +1987,17 @@ const message = {
             'Somente requisições originadas nesses IP/CIDR confiarão em Forwarded e X-Forwarded-Proto para detectar HTTPS',
         passkeyNotSupported: 'O navegador ou ambiente atual não suporta passkeys',
         passkeyPrereqTitle: 'Os seguintes pré-requisitos são necessários para Passkey',
-        passkeyPrereqBindDomain: 'Nome de domínio configurado',
-        passkeyPrereqHttps: 'HTTPS / Contexto seguro',
-        passkeyPrereqBrowser: 'Navegador suporta WebAuthn',
+        passkeyPrereqBindDomain: 'Vinculação de domínio do 1Panel configurada',
+        passkeyPrereqHttps: 'Acesso seguro via HTTPS',
+        passkeyPrereqBrowser: 'O ambiente suporta Passkey (WebAuthn + autenticador de plataforma)',
+        passkeyPrereqBrowserDetailWebAuthnUnavailable:
+            'Use um navegador do sistema e confirme que o painel está aberto em HTTPS com domínio vinculado.',
+        passkeyPrereqBrowserDetailPlatformCapabilityUnavailable:
+            'Este ambiente não pode usar autenticação do dispositivo. Tente um navegador do sistema em uma versão mais nova do SO.',
+        passkeyPrereqBrowserDetailNoPlatformAuthenticator:
+            'Ative bloqueio de tela / impressão digital / reconhecimento facial / Windows Hello e tente novamente.',
+        passkeyPrereqBrowserDetailDetectFailed:
+            'Falha na detecção. Atualize a página e tente novamente, ou troque para um navegador do sistema.',
         passkeyPrereqGoSetup: 'Configurar',
         passkeyCount: 'Vinculadas {0}/{1}',
         passkeyName: 'Nome',
