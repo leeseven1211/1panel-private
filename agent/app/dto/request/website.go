@@ -272,6 +272,17 @@ type WebsiteProxyConfig struct {
 	CorsConfig
 }
 
+type WebsiteProxyDelete struct {
+	ID   uint   `json:"id" validate:"required"`
+	Name string `json:"name" validate:"required"`
+}
+
+type WebsiteProxyStatusUpdate struct {
+	ID     uint   `json:"id" validate:"required"`
+	Name   string `json:"name" validate:"required"`
+	Status string `json:"status" validate:"required"`
+}
+
 type CorsConfig struct {
 	Cors             bool   `json:"cors"`
 	AllowOrigins     string `json:"allowOrigins"`

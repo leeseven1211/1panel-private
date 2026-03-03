@@ -110,6 +110,7 @@ type IWebsiteService interface {
 	GetProxyCache(id uint) (res response.NginxProxyCache, err error)
 	ClearProxyCache(req request.NginxCommonReq) error
 	DeleteProxy(req request.WebsiteProxyDel) (err error)
+	UpdateProxyStatus(req request.WebsiteProxyStatusUpdate) (err error)
 
 	CreateWebsiteDomain(create request.WebsiteDomainCreate) ([]model.WebsiteDomain, error)
 	GetWebsiteDomain(websiteId uint) ([]model.WebsiteDomain, error)

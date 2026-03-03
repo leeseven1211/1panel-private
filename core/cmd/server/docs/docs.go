@@ -20510,6 +20510,60 @@ const docTemplate = `{
 				]
 			}
 		},
+		"/websites/proxies/delete": {
+			"post": {
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "request",
+						"in": "body",
+						"name": "request",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/request.WebsiteProxyDel"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"security": [
+					{
+						"ApiKeyAuth": []
+					},
+					{
+						"Timestamp": []
+					}
+				],
+				"summary": "Delete proxy config",
+				"tags": [
+					"Website"
+				],
+				"x-panel-log": {
+					"BeforeFunctions": [
+						{
+							"db": "websites",
+							"input_column": "id",
+							"input_value": "id",
+							"isList": false,
+							"output_column": "primary_domain",
+							"output_value": "domain"
+						}
+					],
+					"bodyKeys": [
+						"id",
+						"name"
+					],
+					"formatEN": "Delete domain [domain] proxy config [name]",
+					"formatZH": "删除网站 [domain] 反向代理配置 [name] ",
+					"paramKeys": []
+				}
+			}
+		},
 		"/websites/proxies/file": {
 			"post": {
 				"consumes": [
@@ -20559,6 +20613,61 @@ const docTemplate = `{
 					],
 					"formatEN": "Nginx conf proxy file update [domain]",
 					"formatZH": "更新反向代理文件 [domain]",
+					"paramKeys": []
+				}
+			}
+		},
+		"/websites/proxies/status": {
+			"post": {
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "request",
+						"in": "body",
+						"name": "request",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/request.WebsiteProxyStatusUpdate"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"security": [
+					{
+						"ApiKeyAuth": []
+					},
+					{
+						"Timestamp": []
+					}
+				],
+				"summary": "Update proxy config status",
+				"tags": [
+					"Website"
+				],
+				"x-panel-log": {
+					"BeforeFunctions": [
+						{
+							"db": "websites",
+							"input_column": "id",
+							"input_value": "id",
+							"isList": false,
+							"output_column": "primary_domain",
+							"output_value": "domain"
+						}
+					],
+					"bodyKeys": [
+						"id",
+						"name",
+						"status"
+					],
+					"formatEN": "Update domain [domain] proxy config [name] status [status]",
+					"formatZH": "更新网站 [domain] 反向代理配置 [name] 状态 [status] ",
 					"paramKeys": []
 				}
 			}
@@ -32463,6 +32572,21 @@ const docTemplate = `{
 			],
 			"type": "object"
 		},
+		"request.WebsiteProxyDel": {
+			"properties": {
+				"id": {
+					"type": "integer"
+				},
+				"name": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name"
+			],
+			"type": "object"
+		},
 		"request.WebsiteProxyReq": {
 			"properties": {
 				"id": {
@@ -32471,6 +32595,25 @@ const docTemplate = `{
 			},
 			"required": [
 				"id"
+			],
+			"type": "object"
+		},
+		"request.WebsiteProxyStatusUpdate": {
+			"properties": {
+				"id": {
+					"type": "integer"
+				},
+				"name": {
+					"type": "string"
+				},
+				"status": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"status"
 			],
 			"type": "object"
 		},

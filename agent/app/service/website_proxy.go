@@ -411,24 +411,47 @@ func (w WebsiteService) ClearProxyCache(req request.NginxCommonReq) error {
 }
 
 func (w WebsiteService) DeleteProxy(req request.WebsiteProxyDel) (err error) {
-	fileOp := files.NewFileOp()
 	website, err := websiteRepo.GetFirst(repo.WithByID(req.ID))
 	if err != nil {
 		return
 	}
-	nginxInstall, err := getAppInstallByKey(constant.AppOpenresty)
-	if err != nil {
-		return
-	}
-	includeDir := path.Join(nginxInstall.GetPath(), "www", "sites", website.Alias, "proxy")
+	includeDir := GetSitePath(website, SiteProxyDir)
+	fileOp := files.NewFileOp()
 	if !fileOp.Stat(includeDir) {
-		_ = fileOp.CreateDir(includeDir, 0755)
+		return
 	}
 	fileName := fmt.Sprintf("%s.conf", req.Name)
 	includePath := path.Join(includeDir, fileName)
 	backName := fmt.Sprintf("%s.bak", req.Name)
 	backPath := path.Join(includeDir, backName)
+
 	_ = fileOp.DeleteFile(includePath)
 	_ = fileOp.DeleteFile(backPath)
 	return updateNginxConfig(constant.NginxScopeServer, nil, &website)
+}
+
+func (w WebsiteService) UpdateProxyStatus(req request.WebsiteProxyStatusUpdate) (err error) {
+	website, err := websiteRepo.GetFirst(repo.WithByID(req.ID))
+	if err != nil {
+		return
+	}
+	includeDir := GetSitePath(website, SiteProxyDir)
+	fileOp := files.NewFileOp()
+	if !fileOp.Stat(includeDir) {
+		return
+	}
+	fileName := fmt.Sprintf("%s.conf", req.Name)
+	includePath := path.Join(includeDir, fileName)
+	backName := fmt.Sprintf("%s.bak", req.Name)
+	backPath := path.Join(includeDir, backName)
+
+	switch req.Status {
+	case "disable":
+		_ = fileOp.Rename(includePath, backPath)
+		return updateNginxConfig(constant.NginxScopeServer, nil, &website)
+	case "enable":
+		_ = fileOp.Rename(backPath, includePath)
+		return updateNginxConfig(constant.NginxScopeServer, nil, &website)
+	}
+	return errors.New("unknown status")
 }
