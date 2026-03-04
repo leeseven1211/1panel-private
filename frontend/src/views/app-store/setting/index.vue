@@ -40,12 +40,8 @@
                             />
                         </el-form-item>
                         <CustomSetting v-if="isProductPro" />
-                        <span class="input-help logText" v-else>
-                            {{ $t('xpack.customApp.licenseHelper') }}
-                            <el-link class="link" @click="toUpload" type="primary">
-                                {{ $t('license.levelUpPro') }}
-                            </el-link>
-                        </span>
+                        <!-- hide "upgrade pro" entry in private fork -->
+                        <span class="input-help logText" v-else></span>
                     </el-col>
                 </el-row>
             </el-form>

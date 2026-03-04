@@ -117,31 +117,15 @@
                             </el-input>
                         </div>
                     </el-form-item>
-                    <div v-if="globalStore.isIntl">
-                        <el-form-item v-if="(dialogData.rowData!.hasSpec) && !isProductPro">
-                            <span class="input-help logText">
-                                {{ $t('toolbox.clam.alertHelper') }}
-                                <el-link class="link" type="primary" @click="toUpload">
-                                    {{ $t('license.levelUpPro') }}
-                                </el-link>
-                            </span>
-                        </el-form-item>
-                    </div>
+                    <!-- hide "upgrade pro" entry in private fork -->
+                    <div v-if="false"></div>
                     <div v-if="!globalStore.isIntl">
                         <el-form-item prop="hasAlert">
                             <el-checkbox v-model="dialogData.rowData!.hasAlert" :label="$t('xpack.alert.isAlert')" />
                             <span class="input-help">{{ $t('xpack.alert.clamHelper') }}</span>
                         </el-form-item>
-                        <el-form-item
-                            v-if="(dialogData.rowData!.hasAlert || dialogData.rowData!.hasSpec) && !isProductPro"
-                        >
-                            <span class="input-help logText">
-                                {{ $t('toolbox.clam.alertHelper') }}
-                                <el-link class="link" type="primary" @click="toUpload">
-                                    {{ $t('license.levelUpPro') }}
-                                </el-link>
-                            </span>
-                        </el-form-item>
+                        <!-- hide "upgrade pro" entry in private fork -->
+                        <el-form-item v-if="false"></el-form-item>
                         <el-form-item
                             :label="$t('xpack.alert.alertMethod')"
                             v-if="dialogData.rowData!.hasAlert"

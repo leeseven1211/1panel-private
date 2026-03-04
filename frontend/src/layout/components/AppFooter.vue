@@ -9,16 +9,14 @@
                     Copyright © {{ year }} {{ $t('commons.lingxia') }}
                 </a>
             </div>
-            <div class="flex flex-row gap-2 md:flex-col lg:flex-row">
-                <SystemUpgrade :footer="true" />
-            </div>
+            <!-- hide upgrade/community/docs links in footer for private fork -->
+            <div class="flex flex-row gap-2 md:flex-col lg:flex-row"></div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import SystemUpgrade from '@/components/system-upgrade/index.vue';
 import { GlobalStore } from '@/store';
 const globalStore = GlobalStore();
 const mobile = computed(() => {

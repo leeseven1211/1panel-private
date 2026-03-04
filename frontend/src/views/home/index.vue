@@ -9,13 +9,8 @@
             ]"
         >
             <template #route-button>
-                <div class="router-button" v-if="!isOffLine">
-                    <template v-if="!isProductPro">
-                        <el-button link type="primary" @click="toUpload">
-                            {{ $t('license.levelUpPro') }}
-                        </el-button>
-                    </template>
-                </div>
+                <!-- hide "upgrade pro" entry in private fork -->
+                <div class="router-button" v-if="false"></div>
             </template>
         </RouterButton>
 

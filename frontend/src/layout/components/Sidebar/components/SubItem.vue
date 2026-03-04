@@ -19,15 +19,8 @@
             </template>
         </el-menu-item>
 
-        <el-menu-item v-else-if="subItem.path === '/xpack/upage'" :index="''" @click="goUpage">
-            <el-icon v-if="subItem.meta?.icon && level === 0">
-                <SvgIcon :iconName="(subItem.meta?.icon as string)" />
-            </el-icon>
-            <template #title>
-                <span v-if="subItem.meta?.icon && level === 0">{{ $t(subItem.meta?.title as string, 2) }}</span>
-                <span v-else style="margin-left: 10px">{{ $t(subItem.meta?.title as string, 2) }}</span>
-            </template>
-        </el-menu-item>
+        <!-- hide paid/upgrade entry in private fork -->
+        <template v-else-if="subItem.path === '/xpack/upage'"></template>
 
         <el-menu-item v-else :index="subItem.path">
             <el-icon v-if="subItem.meta?.icon && level === 0">
@@ -47,9 +40,7 @@ import SvgIcon from '@/components/svg-icon/svg-icon.vue';
 
 defineProps<{ menuList: RouteRecordRaw[]; level?: number }>();
 
-const goUpage = () => {
-    window.open('https://www.lxware.cn/upage', '_blank', 'noopener,noreferrer');
-};
+// goUpage removed in private fork (hide upgrade entry)
 </script>
 
 <style scoped lang="scss">

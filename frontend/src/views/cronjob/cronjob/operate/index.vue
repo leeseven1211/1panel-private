@@ -693,12 +693,8 @@
                                         <el-checkbox v-model="form.hasAlert" :label="$t('xpack.alert.isAlert')" />
                                         <span class="input-help">{{ $t('xpack.alert.cronJobHelper') }}</span>
 
-                                        <span class="input-help logText" v-if="form.hasAlert && !isProductPro">
-                                            {{ $t('xpack.alert.licenseHelper') }}
-                                            <el-link class="link" @click="toUpload" type="primary">
-                                                {{ $t('license.levelUpPro') }}
-                                            </el-link>
-                                        </span>
+                                        <!-- hide "upgrade pro" entry in private fork -->
+                                        <span class="input-help logText" v-if="false"></span>
                                     </el-form-item>
                                 </LayoutCol>
                             </el-row>
