@@ -1570,9 +1570,7 @@ const onSubmit = async (formEl: FormInstance | undefined) => {
     });
 };
 
-const toUpload = () => {
-    licenseRef.value.acceptParams();
-};
+// toUpload removed in private fork (upgrade entry hidden)
 
 onMounted(() => {
     if (router.currentRoute.value.query.id) {

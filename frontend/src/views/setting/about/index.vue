@@ -26,24 +26,9 @@ import { getSystemAvailable } from '@/api/modules/setting';
 import { onMounted, ref } from 'vue';
 import { GlobalStore } from '@/store';
 import PrimaryLogo from '@/assets/images/1panel-logo.svg?component';
-import { storeToRefs } from 'pinia';
 const globalStore = GlobalStore();
-const { docsUrl } = storeToRefs(globalStore);
 const loading = ref();
 const logoLoadFailed = ref(false);
-
-const toDoc = () => {
-    window.open(docsUrl.value, '_blank', 'noopener,noreferrer');
-};
-const toGithub = () => {
-    window.open('https://github.com/1Panel-dev/1Panel', '_blank', 'noopener,noreferrer');
-};
-const toIssue = () => {
-    window.open('https://github.com/1Panel-dev/1Panel/issues', '_blank', 'noopener,noreferrer');
-};
-const toGithubStar = () => {
-    window.open('https://github.com/1Panel-dev/1Panel', '_blank', 'noopener,noreferrer');
-};
 
 onMounted(() => {
     getSystemAvailable();

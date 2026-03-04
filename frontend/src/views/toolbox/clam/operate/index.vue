@@ -405,9 +405,7 @@ const hasHour = (item: any) => {
     return item.specType !== 'perHour' && item.specType !== 'perNMinute' && item.specType !== 'perNSecond';
 };
 
-const toUpload = () => {
-    licenseRef.value.acceptParams();
-};
+// toUpload removed in private fork (upgrade entry hidden)
 
 const changeSpecType = () => {
     let item = dialogData.value.rowData!.specObj;

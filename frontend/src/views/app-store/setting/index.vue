@@ -98,9 +98,7 @@ const search = async () => {
     }
 };
 
-const toUpload = () => {
-    licenseRef.value.acceptParams();
-};
+// toUpload removed in private fork (upgrade entry hidden)
 
 const getNodeConfig = async () => {
     if (isMasterProductPro.value) {

@@ -443,7 +443,6 @@ import {
     updateSetting,
 } from '@/api/modules/setting';
 import { GlobalStore } from '@/store';
-import { storeToRefs } from 'pinia';
 import { routerToFileWithPath, routerToNameWithQuery, routerToPath } from '@/utils/router';
 import { getWelcomePage } from '@/api/modules/auth';
 import {
@@ -495,7 +494,7 @@ const hasRefreshedOptionsOnHover = ref(false);
 
 const licenseRef = ref();
 const quickJumpRef = ref();
-const { isProductPro, isOffLine } = storeToRefs(globalStore);
+// isProductPro/isOffLine removed in private fork (upgrade entry hidden)
 
 const searchInfo = reactive({
     ioOption: 'all',
@@ -984,9 +983,7 @@ const onBlur = () => {
     isActive.value = false;
 };
 
-const toUpload = () => {
-    licenseRef.value.acceptParams();
-};
+// toUpload removed in private fork (upgrade entry hidden)
 
 const refreshOptionsOnHover = async () => {
     if (hasRefreshedOptionsOnHover.value) return;
