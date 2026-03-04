@@ -103,10 +103,12 @@ const search = async () => {
     resMenuList = adjustAndCleanMenu(hideMenu, menuStore.menuList);
     for (const menu of resMenuList) {
         let menuItem = JSON.parse(JSON.stringify(menu));
+        // hide Advanced Features / Pro entry in private fork
+        if (menuItem.name === 'Xpack-Menu') {
+            continue;
+        }
         if (!showMap[menuItem.name]) {
             continue;
-        } else if (menuItem.name === 'Xpack-Menu') {
-            menuItem.meta.hideInSidebar = false;
         }
         const childMenu = hideMenu.find((item) => item.label == menu.name);
         const childMap = buildIndexMap(childMenu?.children || []);
