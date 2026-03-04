@@ -1,0 +1,61 @@
+name: release-custom
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag (e.g. v2.0-custom.1)"
+        required: true
+        default: "v2.0-custom.1"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build:pro
+
+      - name: Build binaries
+        run: |
+          mkdir -p build
+          make build_core_on_linux
+          make build_agent_on_linux
+
+      - name: Package artifact
+        run: |
+          mkdir -p dist
+          cp build/1panel-core dist/1panel-core
+          cp build/1panel-agent dist/1panel-agent
+          tar czf 1panel-custom-linux-amd64.tar.gz -C dist 1panel-core 1panel-agent
+
+      - name: Create/Update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.version }}
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            1panel-custom-linux-amd64.tar.gz
+            deploy/install-custom.sh

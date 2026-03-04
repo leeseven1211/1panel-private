@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage:
+#   bash install-custom.sh <version>
+# Example:
+#   GITHUB_TOKEN=ghp_xxx bash install-custom.sh v2.0-custom.1
+
+OWNER="leeseven1211"
+REPO="1panel-private"
+VERSION="${1:-latest}"
+ASSET_NAME="1panel-custom-linux-amd64.tar.gz"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "missing command: $1"; exit 1; }; }
+need_cmd curl
+need_cmd tar
+need_cmd systemctl
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Please run as root"
+  exit 1
+fi
+
+# install official 1Panel if not installed
+if ! command -v 1pctl >/dev/null 2>&1; then
+  echo "[1/6] 1Panel not found, install official first..."
+  curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o "$TMP_DIR/quick_start.sh"
+  bash "$TMP_DIR/quick_start.sh"
+else
+  echo "[1/6] 1Panel already installed"
+fi
+
+if [ -z "${GITHUB_TOKEN:-}" ]; then
+  echo "GITHUB_TOKEN is required for private release download"
+  exit 1
+fi
+
+if [ "$VERSION" = "latest" ]; then
+  API_URL="https://api.github.com/repos/${OWNER}/${REPO}/releases/latest"
+else
+  API_URL="https://api.github.com/repos/${OWNER}/${REPO}/releases/tags/${VERSION}"
+fi
+
+echo "[2/6] resolve release asset..."
+ASSET_URL=$(curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" "$API_URL" \
+  | sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*'"$ASSET_NAME"'\)".*/\1/p' | head -n1)
+
+if [ -z "$ASSET_URL" ]; then
+  echo "Cannot find asset: $ASSET_NAME"
+  exit 1
+fi
+
+echo "[3/6] download release asset"
+curl -fL -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/octet-stream" \
+  "$ASSET_URL" -o "$TMP_DIR/$ASSET_NAME"
+
+echo "[4/6] extract"
+mkdir -p "$TMP_DIR/pkg"
+tar xzf "$TMP_DIR/$ASSET_NAME" -C "$TMP_DIR/pkg"
+
+CORE_NEW="$TMP_DIR/pkg/1panel-core"
+AGENT_NEW="$TMP_DIR/pkg/1panel-agent"
+
+[ -f "$CORE_NEW" ] || { echo "missing 1panel-core in package"; exit 1; }
+[ -f "$AGENT_NEW" ] || { echo "missing 1panel-agent in package"; exit 1; }
+
+# Resolve service ExecStart binary paths dynamically
+resolve_exec_bin() {
+  local svc="$1"
+  local line
+  line=$(systemctl cat "$svc" 2>/dev/null | grep -E '^ExecStart=' | head -n1 || true)
+  [ -n "$line" ] || return 1
+  line="${line#ExecStart=}"
+  # strip leading '-'
+  line="${line#-}"
+  # first token is binary path
+  echo "$line" | awk '{print $1}'
+}
+
+CORE_BIN="$(resolve_exec_bin 1panel || true)"
+AGENT_BIN="$(resolve_exec_bin 1panel-agent || true)"
+
+if [ -z "$CORE_BIN" ]; then
+  CORE_BIN="$(command -v 1panel-core || true)"
+fi
+if [ -z "$AGENT_BIN" ]; then
+  AGENT_BIN="$(command -v 1panel-agent || true)"
+fi
+
+[ -n "$CORE_BIN" ] || { echo "cannot resolve 1panel core binary path"; exit 1; }
+[ -n "$AGENT_BIN" ] || { echo "cannot resolve 1panel agent binary path"; exit 1; }
+
+[ -f "$CORE_BIN" ] || { echo "core binary not found: $CORE_BIN"; exit 1; }
+[ -f "$AGENT_BIN" ] || { echo "agent binary not found: $AGENT_BIN"; exit 1; }
+
+echo "[5/6] replace binaries"
+cp -a "$CORE_BIN" "${CORE_BIN}.bak.$(date +%Y%m%d%H%M%S)"
+cp -a "$AGENT_BIN" "${AGENT_BIN}.bak.$(date +%Y%m%d%H%M%S)"
+install -m 755 "$CORE_NEW" "$CORE_BIN"
+install -m 755 "$AGENT_NEW" "$AGENT_BIN"
+
+echo "[6/6] restart services"
+systemctl daemon-reload || true
+systemctl restart 1panel
+systemctl restart 1panel-agent || true
+sleep 1
+systemctl --no-pager --full status 1panel | head -n 20 || true
+systemctl --no-pager --full status 1panel-agent | head -n 20 || true
+
+echo "Done. Custom build installed."
