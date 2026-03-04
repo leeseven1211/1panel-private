@@ -17,17 +17,7 @@
                     <el-divider direction="vertical" />
                 </span>
                 <div class="flex flex-wrap items-center">
-                    <el-link underline="never" type="primary" @click="toLxware">
-                        <span v-if="isMasterPro">
-                            {{ $t('license.pro') }}
-                        </span>
-                        <span v-else-if="isOffLine">
-                            {{ $t('license.offLine') }}
-                        </span>
-                        <span v-else>
-                            {{ $t('license.community') }}
-                        </span>
-                    </el-link>
+                    <span class="license-badge">{{ $t('license.community') }}</span>
                     <el-link underline="never" class="version" type="primary" @click="getVersionLog()">
                         {{ version }}
                     </el-link>
@@ -66,9 +56,6 @@ const globalStore = GlobalStore();
 const { docsUrl, isOffLine, isFxplay } = storeToRefs(globalStore);
 const upgradeRef = ref();
 const releasesRef = ref();
-const isMasterPro = computed(() => {
-    return globalStore.isMasterPro();
-});
 
 const version = ref<string>('');
 const loading = ref(false);
@@ -93,21 +80,6 @@ const getVersionLog = () => {
     releasesRef.value.acceptParams();
 };
 
-const toLxware = () => {
-    if (isOffLine.value) {
-        to1Panel();
-        return;
-    }
-    if (!globalStore.isIntl) {
-        window.open('https://www.lxware.cn/1panel' + '', '_blank', 'noopener,noreferrer');
-    } else {
-        window.open('https://1panel.pro/pricing' + '', '_blank', 'noopener,noreferrer');
-    }
-};
-
-const to1Panel = () => {
-    window.open('https://1panel.cn', '_blank', 'noopener,noreferrer');
-};
 
 const toDoc = () => {
     window.open(docsUrl.value, '_blank', 'noopener,noreferrer');

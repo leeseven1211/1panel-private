@@ -34,10 +34,6 @@ const buttons = [
         path: '/settings/snapshot',
     },
     {
-        label: i18n.global.t('setting.license'),
-        path: '/settings/license',
-    },
-    {
         label: i18n.global.t('setting.about'),
         path: '/settings/about',
     },
@@ -45,10 +41,12 @@ const buttons = [
 
 onMounted(() => {
     if (isOffLine.value) {
-        buttons.splice(5, 1);
+        const idx = buttons.findIndex((b) => b.path === '/settings/about');
+        if (idx >= 0) buttons.splice(idx, 1);
     }
     if (isFxplay.value) {
-        buttons.splice(6, 1);
+        const idx = buttons.findIndex((b) => b.path === '/settings/about');
+        if (idx >= 0) buttons.splice(idx, 1);
     }
 });
 </script>
