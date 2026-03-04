@@ -26,7 +26,8 @@ fi
 # install official 1Panel if not installed
 if ! command -v 1pctl >/dev/null 2>&1; then
   echo "[1/6] 1Panel not found, install official first..."
-  curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o "$TMP_DIR/quick_start.sh"
+  # Use v2 installer channel by default for custom v2 builds
+  curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh -o "$TMP_DIR/quick_start.sh"
   bash "$TMP_DIR/quick_start.sh"
 else
   echo "[1/6] 1Panel already installed"
@@ -90,23 +91,31 @@ if [ -z "$AGENT_BIN" ]; then
 fi
 
 [ -n "$CORE_BIN" ] || { echo "cannot resolve 1panel core binary path"; exit 1; }
-[ -n "$AGENT_BIN" ] || { echo "cannot resolve 1panel agent binary path"; exit 1; }
-
 [ -f "$CORE_BIN" ] || { echo "core binary not found: $CORE_BIN"; exit 1; }
-[ -f "$AGENT_BIN" ] || { echo "agent binary not found: $AGENT_BIN"; exit 1; }
 
 echo "[5/6] replace binaries"
 cp -a "$CORE_BIN" "${CORE_BIN}.bak.$(date +%Y%m%d%H%M%S)"
-cp -a "$AGENT_BIN" "${AGENT_BIN}.bak.$(date +%Y%m%d%H%M%S)"
 install -m 755 "$CORE_NEW" "$CORE_BIN"
-install -m 755 "$AGENT_NEW" "$AGENT_BIN"
+
+if [ -n "$AGENT_BIN" ] && [ -f "$AGENT_BIN" ]; then
+  cp -a "$AGENT_BIN" "${AGENT_BIN}.bak.$(date +%Y%m%d%H%M%S)"
+  install -m 755 "$AGENT_NEW" "$AGENT_BIN"
+  HAS_AGENT=1
+else
+  echo "[warn] 1panel-agent service/binary not found, skip agent replacement"
+  HAS_AGENT=0
+fi
 
 echo "[6/6] restart services"
 systemctl daemon-reload || true
 systemctl restart 1panel
-systemctl restart 1panel-agent || true
+if [ "$HAS_AGENT" -eq 1 ]; then
+  systemctl restart 1panel-agent || true
+fi
 sleep 1
 systemctl --no-pager --full status 1panel | head -n 20 || true
-systemctl --no-pager --full status 1panel-agent | head -n 20 || true
+if [ "$HAS_AGENT" -eq 1 ]; then
+  systemctl --no-pager --full status 1panel-agent | head -n 20 || true
+fi
 
 echo "Done. Custom build installed."
