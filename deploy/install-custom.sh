@@ -8,6 +8,9 @@ set -euo pipefail
 
 OWNER="leeseven1211"
 REPO="1panel-private"
+
+# prevent "unbound variable" when running with `set -u`
+: "${GITHUB_TOKEN:=}"
 VERSION="${1:-latest}"
 ASSET_NAME="1panel-custom-linux-amd64.tar.gz"
 TMP_DIR="$(mktemp -d)"
