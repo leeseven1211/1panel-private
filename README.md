@@ -59,8 +59,14 @@ Install **this fork's** custom build (replaces core/agent binaries from GitHub R
 
 **Interactive mode (you will be prompted for language / port / entrance / username / password):**
 
+> Important: interactive mode requires a real TTY. Do NOT use `curl | bash` piping.
+> Use the download-then-run method below.
+
 ```bash
-INTERACTIVE=1 curl -fsSL https://github.com/leeseven1211/1panel-private/releases/download/v2.0-custom.12/quick-install.sh | sudo -E bash -s -- v2.0-custom.12
+curl -fsSL -o quick-install.sh \
+  https://github.com/leeseven1211/1panel-private/releases/download/v2.0-custom.12/quick-install.sh
+chmod +x quick-install.sh
+sudo -E env INTERACTIVE=1 ./quick-install.sh v2.0-custom.12
 ```
 
 **Non-interactive mode (auto defaults, avoids SSH non-TTY prompt issues):**
