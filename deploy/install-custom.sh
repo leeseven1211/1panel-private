@@ -101,14 +101,14 @@ resolve_exec_bin() {
 }
 
 # Detect service names (v2 uses 1panel-core/1panel-agent)
-CORE_SVC=""
+CORE_SVC="1panel"
 AGENT_SVC=""
-if systemctl list-unit-files | grep -q '^1panel-core\.service'; then
+
+# Prefer probing actual unit existence (more reliable than parsing list-unit-files)
+if systemctl cat 1panel-core >/dev/null 2>&1; then
   CORE_SVC="1panel-core"
-else
-  CORE_SVC="1panel"
 fi
-if systemctl list-unit-files | grep -q '^1panel-agent\.service'; then
+if systemctl cat 1panel-agent >/dev/null 2>&1; then
   AGENT_SVC="1panel-agent"
 fi
 
