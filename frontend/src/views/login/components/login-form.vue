@@ -79,22 +79,7 @@
                             {{ $t('commons.login.passkeyToPassword') }}
                         </el-link>
                     </el-form-item>
-                    <el-form-item v-if="!isIntl && !isFxplay">
-                        <el-checkbox v-model="loginForm.agreeLicense">
-                            <template #default>
-                                <span class="agree-title">
-                                    {{ $t('commons.button.agree') }}
-                                    <a
-                                        class="agree"
-                                        href="https://www.fit2cloud.com/legal/licenses.html"
-                                        target="_blank"
-                                    >
-                                        {{ $t('commons.login.licenseHelper') }}
-                                    </a>
-                                </span>
-                            </template>
-                        </el-checkbox>
-                    </el-form-item>
+
                 </div>
             </div>
             <div v-else>
@@ -193,22 +178,7 @@
                         <el-text v-if="isDemo" type="danger" class="demo">
                             {{ $t('commons.login.username') }}:demo {{ $t('commons.login.password') }}:1panel
                         </el-text>
-                        <el-form-item prop="agreeLicense" v-if="!isIntl && !isFxplay">
-                            <el-checkbox v-model="loginForm.agreeLicense">
-                                <template #default>
-                                    <span class="agree-title">
-                                        {{ $t('commons.button.agree') }}
-                                        <a
-                                            class="agree"
-                                            href="https://www.fit2cloud.com/legal/licenses.html"
-                                            target="_blank"
-                                        >
-                                            {{ $t('commons.login.licenseHelper') }}
-                                        </a>
-                                    </span>
-                                </template>
-                            </el-checkbox>
-                        </el-form-item>
+
                     </div>
                 </el-form>
             </div>
@@ -290,14 +260,15 @@ const loginForm = reactive({
     captcha: '',
     captchaID: '',
     authMethod: 'session',
-    agreeLicense: false,
+    agreeLicense: true,
     language: 'zh',
 });
 
 const loginRules = reactive({
     name: [{ required: true, validator: checkUsername, trigger: 'blur' }],
     password: [{ required: true, validator: checkPassword, trigger: 'blur' }],
-    agreeLicense: [{ required: true, validator: checkAgreeLicense, trigger: 'blur' }],
+    // agreeLicense removed in this fork
+    // agreeLicense: [{ required: true, validator: checkAgreeLicense, trigger: 'blur' }],
 });
 
 function checkUsername(rule: any, value: any, callback: any) {
@@ -312,12 +283,7 @@ function checkPassword(rule: any, value: any, callback: any) {
     }
     callback();
 }
-function checkAgreeLicense(rule: any, value: any, callback: any) {
-    if (!value && !_isMobile()) {
-        return callback(new Error(i18n.t('commons.login.errorAgree')));
-    }
-    callback();
-}
+// agreeLicense removed in this fork
 
 let isLoggingIn = false;
 const userNameRef = ref();
@@ -406,16 +372,6 @@ const login = (formEl: FormInstance | undefined) => {
     errCaptcha.value = false;
     formEl.validate(async (valid) => {
         if (!valid) return;
-        if (isIntl.value || isFxplay.value) {
-            loginForm.agreeLicense = true;
-        }
-        if (!loginForm.agreeLicense) {
-            if (_isMobile()) {
-                pendingLoginMethod.value = 'password';
-                open.value = true;
-            }
-            return;
-        }
         let requestLoginForm = {
             name: loginForm.name,
             password: encryptPassword(loginForm.password),
@@ -514,15 +470,6 @@ const passkeyLogin = async () => {
     if (!passkeySupported.value) {
         disableAutoPasskey();
         MsgError(i18n.t('commons.login.passkeyNotSupported'));
-        return;
-    }
-    if (!isIntl.value && !isFxplay.value && !loginForm.agreeLicense) {
-        if (_isMobile() || showPasskeyOnly.value) {
-            pendingLoginMethod.value = 'passkey';
-            open.value = true;
-        } else {
-            MsgError(i18n.t('commons.login.errorAgree'));
-        }
         return;
     }
     try {
