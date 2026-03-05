@@ -55,7 +55,10 @@ bash -c "$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_star
 
 ### This fork (custom build)
 
-Install **this fork's** custom build (replaces core/agent binaries from GitHub Releases):
+Install **this fork's** custom build (replaces core/agent binaries from GitHub Releases).
+
+- Supported architectures: **linux/amd64** and **linux/arm64** (auto-detected by `uname -m`).
+
 
 **Interactive mode (you will be prompted for language / port / entrance / username / password):**
 
@@ -63,16 +66,18 @@ Install **this fork's** custom build (replaces core/agent binaries from GitHub R
 > Use the download-then-run method below.
 
 ```bash
+VER=v2.0-custom.13
 curl -fsSL -o quick-install.sh \
-  https://github.com/leeseven1211/1panel-private/releases/download/v2.0-custom.12/quick-install.sh
+  https://github.com/leeseven1211/1panel-private/releases/download/$VER/quick-install.sh
 chmod +x quick-install.sh
-sudo -E env INTERACTIVE=1 ./quick-install.sh v2.0-custom.12
+sudo -E env INTERACTIVE=1 ./quick-install.sh $VER
 ```
 
 **Non-interactive mode (auto defaults, avoids SSH non-TTY prompt issues):**
 
 ```bash
-curl -fsSL https://github.com/leeseven1211/1panel-private/releases/download/v2.0-custom.12/quick-install.sh | sudo bash -s -- v2.0-custom.12
+VER=v2.0-custom.13
+curl -fsSL https://github.com/leeseven1211/1panel-private/releases/download/$VER/quick-install.sh | sudo bash -s -- $VER
 ```
 
 After installation, print the panel access info:
