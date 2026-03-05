@@ -32,18 +32,23 @@ if ! command -v 1pctl >/dev/null 2>&1; then
   # Use v2 installer channel by default for custom v2 builds
   curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh -o "$TMP_DIR/quick_start.sh"
 
-  # Non-interactive installer input to avoid hanging on prompts.
-  # Prompts vary slightly by version, but generally include:
-  # - language selection
-  # - install dir (blank = /opt)
-  # - docker install / mirror questions (answer n)
-  # - port/entrance/user/password (use defaults)
-  printf '1\n\n'"${PANEL_DOCKER_INSTALL:-n}"'\n\n\n\n\n\n' | bash "$TMP_DIR/quick_start.sh" || true
+  if [ "${INTERACTIVE:-0}" = "1" ]; then
+    echo "[info] INTERACTIVE=1: running official v2 installer in interactive mode"
+    bash "$TMP_DIR/quick_start.sh"
+  else
+    # Non-interactive installer input to avoid hanging on prompts.
+    # Prompts vary slightly by version, but generally include:
+    # - language selection
+    # - install dir (blank = /opt)
+    # - docker install / mirror questions (answer n)
+    # - port/entrance/user/password (use defaults)
+    printf '1\n\n'"${PANEL_DOCKER_INSTALL:-n}"'\n\n\n\n\n\n' | bash "$TMP_DIR/quick_start.sh" || true
 
-  # If install succeeded, 1pctl should exist now.
-  if ! command -v 1pctl >/dev/null 2>&1; then
-    echo "official v2 install did not produce 1pctl; please run installer manually and rerun this script"
-    exit 1
+    # If install succeeded, 1pctl should exist now.
+    if ! command -v 1pctl >/dev/null 2>&1; then
+      echo "official v2 install did not produce 1pctl; please run installer manually (or INTERACTIVE=1) and rerun this script"
+      exit 1
+    fi
   fi
 else
   echo "[1/6] 1Panel already installed"
