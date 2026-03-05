@@ -12,7 +12,17 @@ REPO="1panel-private"
 # prevent "unbound variable" when running with `set -u`
 : "${GITHUB_TOKEN:=}"
 VERSION="${1:-latest}"
-ASSET_NAME="1panel-custom-linux-amd64.tar.gz"
+# Pick asset by CPU architecture
+ARCH_RAW="$(uname -m)"
+case "$ARCH_RAW" in
+  x86_64|amd64)
+    ASSET_NAME="1panel-custom-linux-amd64.tar.gz";;
+  aarch64|arm64)
+    ASSET_NAME="1panel-custom-linux-arm64.tar.gz";;
+  *)
+    echo "Unsupported arch: $ARCH_RAW";
+    exit 1;;
+esac
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 

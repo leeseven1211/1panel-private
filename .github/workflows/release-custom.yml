@@ -36,18 +36,29 @@ jobs:
           npm install
           npm run build:pro
 
-      - name: Build binaries
+      - name: Build binaries (amd64 + arm64)
         run: |
           mkdir -p build
-          make build_core_on_linux
-          make build_agent_on_linux
 
-      - name: Package artifact
+          # amd64
+          (cd core  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags '-s -w' -o ../build/1panel-core-amd64 ./cmd/server/main.go)
+          (cd agent && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags '-s -w' -o ../build/1panel-agent-amd64 ./cmd/server/main.go)
+
+          # arm64
+          (cd core  && CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags '-s -w' -o ../build/1panel-core-arm64 ./cmd/server/main.go)
+          (cd agent && CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags '-s -w' -o ../build/1panel-agent-arm64 ./cmd/server/main.go)
+
+      - name: Package artifacts
         run: |
-          mkdir -p dist
-          cp build/1panel-core dist/1panel-core
-          cp build/1panel-agent dist/1panel-agent
-          tar czf 1panel-custom-linux-amd64.tar.gz -C dist 1panel-core 1panel-agent
+          mkdir -p dist/amd64 dist/arm64
+
+          cp build/1panel-core-amd64 dist/amd64/1panel-core
+          cp build/1panel-agent-amd64 dist/amd64/1panel-agent
+          tar czf 1panel-custom-linux-amd64.tar.gz -C dist/amd64 1panel-core 1panel-agent
+
+          cp build/1panel-core-arm64 dist/arm64/1panel-core
+          cp build/1panel-agent-arm64 dist/arm64/1panel-agent
+          tar czf 1panel-custom-linux-arm64.tar.gz -C dist/arm64 1panel-core 1panel-agent
 
       - name: Create/Update release
         uses: softprops/action-gh-release@v2
@@ -58,4 +69,5 @@ jobs:
           generate_release_notes: true
           files: |
             1panel-custom-linux-amd64.tar.gz
+            1panel-custom-linux-arm64.tar.gz
             deploy/install-custom.sh
