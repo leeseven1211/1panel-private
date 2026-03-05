@@ -31,7 +31,20 @@ if ! command -v 1pctl >/dev/null 2>&1; then
   echo "[1/6] 1Panel not found, install official first..."
   # Use v2 installer channel by default for custom v2 builds
   curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh -o "$TMP_DIR/quick_start.sh"
-  bash "$TMP_DIR/quick_start.sh"
+
+  # Non-interactive installer input to avoid hanging on prompts.
+  # Prompts vary slightly by version, but generally include:
+  # - language selection
+  # - install dir (blank = /opt)
+  # - docker install / mirror questions (answer n)
+  # - port/entrance/user/password (use defaults)
+  printf '1\n\n'"${PANEL_DOCKER_INSTALL:-n}"'\n\n\n\n\n\n' | bash "$TMP_DIR/quick_start.sh" || true
+
+  # If install succeeded, 1pctl should exist now.
+  if ! command -v 1pctl >/dev/null 2>&1; then
+    echo "official v2 install did not produce 1pctl; please run installer manually and rerun this script"
+    exit 1
+  fi
 else
   echo "[1/6] 1Panel already installed"
 fi
@@ -126,7 +139,11 @@ fi
 
 echo "[6/6] restart services"
 systemctl daemon-reload || true
-systemctl restart "$CORE_SVC"
+systemctl restart "$CORE_SVC" || {
+  echo "failed to restart $CORE_SVC";
+  systemctl --no-pager -l status "$CORE_SVC" || true;
+  exit 1;
+}
 if [ "$HAS_AGENT" -eq 1 ]; then
   systemctl restart "$AGENT_SVC" || true
 fi

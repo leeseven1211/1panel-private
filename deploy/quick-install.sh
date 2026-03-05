@@ -9,7 +9,7 @@ set -euo pipefail
 
 OWNER="leeseven1211"
 REPO="1panel-private"
-VERSION="${1:-v2.0-custom.6}"
+VERSION="${1:-v2.0-custom.10}"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "Please run as root"
