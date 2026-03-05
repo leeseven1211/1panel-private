@@ -79,7 +79,6 @@
                             {{ $t('commons.login.passkeyToPassword') }}
                         </el-link>
                     </el-form-item>
-
                 </div>
             </div>
             <div v-else>
@@ -178,7 +177,6 @@
                         <el-text v-if="isDemo" type="danger" class="demo">
                             {{ $t('commons.login.username') }}:demo {{ $t('commons.login.password') }}:1panel
                         </el-text>
-
                     </div>
                 </el-form>
             </div>
@@ -247,10 +245,6 @@ const open = ref(false);
 const loginBtnLinkColor = ref<string | null>(null);
 
 type FormInstance = InstanceType<typeof ElForm>;
-const _isMobile = () => {
-    const rect = document.body.getBoundingClientRect();
-    return rect.width - 1 < 600;
-};
 
 const loginButtonFocused = ref();
 const loginFormRef = ref<FormInstance>();
