@@ -17,6 +17,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Repo is public: no token needed.
+: "${GITHUB_TOKEN:=}"
 
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "missing command: $1"; exit 1; }; }
 need_cmd curl
@@ -33,6 +34,6 @@ chmod +x "$TMP_DIR/install-custom.sh"
 
 echo "[2/2] run installer (${VERSION})"
 # Pass version through; installer will download the tarball and replace binaries.
-GITHUB_TOKEN="$GITHUB_TOKEN" bash "$TMP_DIR/install-custom.sh" "$VERSION"
+bash "$TMP_DIR/install-custom.sh" "$VERSION"
 
 echo "All done. Use '1pctl user-info' to get panel address/user/password."
