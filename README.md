@@ -86,6 +86,15 @@ After installation, print the panel access info:
 sudo 1pctl user-info
 ```
 
+### Update (already installed)
+
+To update an already-installed machine to the latest custom build, just rerun the installer (it will **only replace binaries + restart services**):
+
+```bash
+VER=v2.0-custom.14
+curl -fsSL https://github.com/leeseven1211/1panel-private/releases/download/$VER/quick-install.sh | sudo bash -s -- $VER
+```
+
 > Note: If the machine already has 1Panel installed, the installer will skip the official installation step and only replace the binaries + restart services.
 
 ## Screenshot
