@@ -45,11 +45,37 @@
 
 ## Quick Start
 
+### Official 1Panel
+
 Execute the script below and follow the prompts to install 1Panel:
 
 ```bash
 bash -c "$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh)"
 ```
+
+### This fork (custom build)
+
+Install **this fork's** custom build (replaces core/agent binaries from GitHub Releases):
+
+**Interactive mode (you will be prompted for language / port / entrance / username / password):**
+
+```bash
+INTERACTIVE=1 curl -fsSL https://github.com/leeseven1211/1panel-private/releases/download/v2.0-custom.12/quick-install.sh | sudo -E bash -s -- v2.0-custom.12
+```
+
+**Non-interactive mode (auto defaults, avoids SSH non-TTY prompt issues):**
+
+```bash
+curl -fsSL https://github.com/leeseven1211/1panel-private/releases/download/v2.0-custom.12/quick-install.sh | sudo bash -s -- v2.0-custom.12
+```
+
+After installation, print the panel access info:
+
+```bash
+sudo 1pctl user-info
+```
+
+> Note: If the machine already has 1Panel installed, the installer will skip the official installation step and only replace the binaries + restart services.
 
 ## Screenshot
 
