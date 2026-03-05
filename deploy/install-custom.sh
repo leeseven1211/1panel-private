@@ -33,9 +33,13 @@ else
   echo "[1/6] 1Panel already installed"
 fi
 
-if [ -z "${GITHUB_TOKEN:-}" ]; then
-  echo "GITHUB_TOKEN is required for private release download"
-  exit 1
+# If repo/release is private, set GITHUB_TOKEN with read access.
+# When repo is public, token is optional.
+CURL_AUTH_ARGS=()
+API_AUTH_ARGS=()
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  CURL_AUTH_ARGS=( -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/octet-stream" )
+  API_AUTH_ARGS=( -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" )
 fi
 
 if [ "$VERSION" = "latest" ]; then
@@ -45,7 +49,7 @@ else
 fi
 
 echo "[2/6] resolve release asset..."
-ASSET_URL=$(curl -fsSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" "$API_URL" \
+ASSET_URL=$(curl -fsSL "${API_AUTH_ARGS[@]}" "$API_URL" \
   | sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*'"$ASSET_NAME"'\)".*/\1/p' | head -n1)
 
 if [ -z "$ASSET_URL" ]; then
@@ -54,7 +58,7 @@ if [ -z "$ASSET_URL" ]; then
 fi
 
 echo "[3/6] download release asset"
-curl -fL -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/octet-stream" \
+curl -fL "${CURL_AUTH_ARGS[@]}" \
   "$ASSET_URL" -o "$TMP_DIR/$ASSET_NAME"
 
 echo "[4/6] extract"
@@ -80,15 +84,26 @@ resolve_exec_bin() {
   echo "$line" | awk '{print $1}'
 }
 
-CORE_BIN="$(resolve_exec_bin 1panel || true)"
-AGENT_BIN="$(resolve_exec_bin 1panel-agent || true)"
+# Detect service names (v2 uses 1panel-core/1panel-agent)
+CORE_SVC=""
+AGENT_SVC=""
+if systemctl list-unit-files | grep -q '^1panel-core\.service'; then
+  CORE_SVC="1panel-core"
+else
+  CORE_SVC="1panel"
+fi
+if systemctl list-unit-files | grep -q '^1panel-agent\.service'; then
+  AGENT_SVC="1panel-agent"
+fi
 
-if [ -z "$CORE_BIN" ]; then
-  CORE_BIN="$(command -v 1panel-core || true)"
+CORE_BIN="$(resolve_exec_bin "$CORE_SVC" || true)"
+AGENT_BIN=""
+if [ -n "$AGENT_SVC" ]; then
+  AGENT_BIN="$(resolve_exec_bin "$AGENT_SVC" || true)"
 fi
-if [ -z "$AGENT_BIN" ]; then
-  AGENT_BIN="$(command -v 1panel-agent || true)"
-fi
+
+[ -n "$CORE_BIN" ] || CORE_BIN="$(command -v 1panel-core || command -v 1panel || true)"
+[ -n "$AGENT_BIN" ] || AGENT_BIN="$(command -v 1panel-agent || true)"
 
 [ -n "$CORE_BIN" ] || { echo "cannot resolve 1panel core binary path"; exit 1; }
 [ -f "$CORE_BIN" ] || { echo "core binary not found: $CORE_BIN"; exit 1; }
@@ -97,7 +112,7 @@ echo "[5/6] replace binaries"
 cp -a "$CORE_BIN" "${CORE_BIN}.bak.$(date +%Y%m%d%H%M%S)"
 install -m 755 "$CORE_NEW" "$CORE_BIN"
 
-if [ -n "$AGENT_BIN" ] && [ -f "$AGENT_BIN" ]; then
+if [ -n "$AGENT_BIN" ] && [ -f "$AGENT_BIN" ] && [ -n "$AGENT_SVC" ]; then
   cp -a "$AGENT_BIN" "${AGENT_BIN}.bak.$(date +%Y%m%d%H%M%S)"
   install -m 755 "$AGENT_NEW" "$AGENT_BIN"
   HAS_AGENT=1
@@ -108,14 +123,14 @@ fi
 
 echo "[6/6] restart services"
 systemctl daemon-reload || true
-systemctl restart 1panel
+systemctl restart "$CORE_SVC"
 if [ "$HAS_AGENT" -eq 1 ]; then
-  systemctl restart 1panel-agent || true
+  systemctl restart "$AGENT_SVC" || true
 fi
 sleep 1
-systemctl --no-pager --full status 1panel | head -n 20 || true
+systemctl --no-pager --full status "$CORE_SVC" | head -n 20 || true
 if [ "$HAS_AGENT" -eq 1 ]; then
-  systemctl --no-pager --full status 1panel-agent | head -n 20 || true
+  systemctl --no-pager --full status "$AGENT_SVC" | head -n 20 || true
 fi
 
 echo "Done. Custom build installed."
