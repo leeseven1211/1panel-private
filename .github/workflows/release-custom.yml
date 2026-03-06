@@ -71,3 +71,4 @@ jobs:
             1panel-custom-linux-amd64.tar.gz
             1panel-custom-linux-arm64.tar.gz
             deploy/install-custom.sh
+            deploy/quick-install.sh
